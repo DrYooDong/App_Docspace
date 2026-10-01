@@ -1,0 +1,43 @@
+{
+  "totalDiseases": 2,
+  "updatedAt": "2026-09-20T03:21:28.636Z",
+  "diseases": [
+    {
+      "key": "xo_gan",
+      "name": "Xơ gan",
+      "icdCode": "K74",
+      "specialty": "Tiêu hóa",
+      "severity": "routine",
+      "aliases": [
+        "Chẩn đoán Xơ gan",
+        "Chẩn đoán cACLD",
+        "Liver Cirrhosis Diagnosis",
+        "Tiêu chuẩn chẩn đoán Xơ gan"
+      ],
+      "parts": {
+        "P1": {
+          "filename": "CD_Xơ gan.md",
+          "size": 23632,
+          "relPath": "2.3. Kho chẩn đoán/Truyền nhiễm/CD_Xơ gan.md"
+        }
+      },
+      "criteriaCount": 8
+    },
+    {
+      "key": "sot_xuat_huyet_dengue",
+      "name": "Sốt xuất huyết Dengue",
+      "icdCode": "R69",
+      "specialty": "Truyền nhiễm",
+      "severity": "urgent",
+      "aliases": [],
+      "parts": {
+        "P1": {
+          "filename": "CD_Sốt xuất huyết Dengue.md",
+          "size": 20790,
+          "relPath": "2.3. Kho chẩn đoán/Truyền nhiễm/CD_Sốt xuất huyết Dengue.md"
+        }
+      },
+      "criteriaCount": 8
+    }
+  ]
+}

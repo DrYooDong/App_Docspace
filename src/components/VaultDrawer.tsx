@@ -1,0 +1,1385 @@
+import React, { useMemo, useState } from 'react';
+import {
+  Activity,
+  ArrowRight,
+  BookOpen,
+  Check,
+  ChevronRight,
+  Clock,
+  ExternalLink,
+  Filter,
+  Layers,
+  Search,
+  Sparkles,
+  Stethoscope,
+  Tag,
+  X,
+} from 'lucide-react';
+import {
+  getCdssAppUrl,
+  getKhoSummaries,
+  getKnowledgeVaultWebUrl,
+  KHO_DEFINITIONS,
+  searchVaultArticles,
+  VaultArticle,
+} from '../lib/vaultBridge.ts';
+import {
+  GUIDELINE_STUDIES,
+  getGuidelineWebUrl,
+  searchGuidelines,
+  SOURCE_TYPE_LABELS,
+} from '../lib/guidelineBridge.ts';
+import { GuidelineStudy, SyndromeDefinition } from '../types.ts';
+import { CdssToolSlug } from './CdssModal.tsx';
+import { ALL_SYNDROMES } from '../../data/syndromes/index.ts';
+
+interface VaultDrawerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialQuery?: string;
+  initialKho?: string;
+  initialDiseaseName?: string;
+  onOpenCdssModal?: (tool: CdssToolSlug) => void;
+}
+
+export const VaultDrawer: React.FC<VaultDrawerProps> = ({
+  isOpen,
+  onClose,
+  initialQuery = '',
+  initialKho = 'ALL',
+  initialDiseaseName,
+  onOpenCdssModal,
+}) => {
+  const [searchTerm, setSearchTerm] = useState(initialQuery || initialDiseaseName || '');
+  const [activeKho, setActiveKho] = useState(initialKho);
+  const [selectedArticle, setSelectedArticle] = useState<VaultArticle | null>(null);
+  const [selectedGuideline, setSelectedGuideline] = useState<GuidelineStudy | null>(null);
+  const [selectedSyndrome, setSelectedSyndrome] = useState<SyndromeDefinition | null>(null);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setSearchTerm(initialQuery || initialDiseaseName || '');
+      setActiveKho(initialKho || 'ALL');
+      setSelectedArticle(null);
+      setSelectedGuideline(null);
+      setSelectedSyndrome(null);
+    }
+  }, [isOpen, initialQuery, initialKho, initialDiseaseName]);
+
+  const khoSummaries = useMemo(() => getKhoSummaries(), []);
+
+  const { results, total } = useMemo(() => {
+    return searchVaultArticles(searchTerm, activeKho, 'ALL', 40);
+  }, [searchTerm, activeKho]);
+
+  const guidelineResults = useMemo(() => {
+    return searchGuidelines(searchTerm, 'ALL', 40);
+  }, [searchTerm]);
+
+  const syndromeResults = useMemo(() => {
+    if (!searchTerm.trim()) return ALL_SYNDROMES;
+    const term = searchTerm.toLowerCase().trim();
+    return ALL_SYNDROMES.filter(
+      (s) =>
+        s.ten.toLowerCase().includes(term) ||
+        s.tenVietTat?.toLowerCase().includes(term) ||
+        s.chuyenKhoa?.toLowerCase().includes(term) ||
+        s.moTa.toLowerCase().includes(term) ||
+        s.benhLienQuan?.some(
+          (b) => b.benhTen.toLowerCase().includes(term) || b.benhSlug.toLowerCase().includes(term)
+        )
+    );
+  }, [searchTerm]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-hidden animate-fadeIn">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Drawer Container: Bottom Sheet trên Mobile (<768px), Side Drawer trên Desktop (>=768px) */}
+      <div className="fixed inset-x-0 bottom-0 md:bottom-auto md:top-0 md:right-0 md:left-auto md:inset-y-0 max-w-full flex md:pl-10 h-[88vh] md:h-full z-10 pointer-events-auto">
+        <div className="w-full md:w-screen md:max-w-2xl bg-white shadow-2xl flex flex-col border-t md:border-t-0 md:border-l border-slate-200 rounded-t-2xl md:rounded-none overflow-hidden animate-slide-up md:animate-none">
+          {/* Mobile Drag Bar Indicator */}
+          <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2 md:hidden shrink-0" />
+
+          {/* Header */}
+          <div className="px-4 sm:px-5 py-3 sm:py-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-md shrink-0">
+                <BookOpen className="w-4.5 h-4.5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="font-display font-bold text-sm sm:text-base tracking-tight truncate">
+                    Knowledge & EBM Vault
+                  </h2>
+                  <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/20 text-blue-300 font-semibold border border-blue-400/30">
+                    2.400+ Vault
+                  </span>
+                </div>
+                <p className="text-[11px] sm:text-xs text-slate-400 truncate">
+                  Tra cứu y học chứng cứ, phác đồ &amp; chuẩn đoán
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer shrink-0 min-h-[38px] min-w-[38px] flex items-center justify-center"
+              aria-label="Đóng ngăn tra cứu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+
+          {/* Search & Filter Bar */}
+          <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-col gap-2.5 shrink-0">
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Tìm kiếm bệnh, triệu chứng, mã ICD-10, guideline hoặc thuốc..."
+                className="w-full pl-10 pr-9 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 shadow-2xs"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Quick Specialized Vault Jump Buttons */}
+            <div className="flex items-center justify-between gap-1 flex-wrap pt-0.5">
+              <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-amber-500" />
+                Kho chuyên sâu:
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap text-xs">
+                <button
+                  onClick={() => {
+                    setActiveKho('GUIDELINE');
+                    setSelectedArticle(null);
+                    setSelectedGuideline(null);
+                  }}
+                  className={`w-7 h-7 flex items-center justify-center rounded-md font-bold transition-all cursor-pointer text-xs shadow-2xs ${
+                    activeKho === 'GUIDELINE'
+                      ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-400/40'
+                      : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+                  }`}
+                  title={`Kho Guidelines EBM (${GUIDELINE_STUDIES.length})`}
+                  aria-label="Kho Guidelines"
+                >
+                  <span>📚</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveKho('CC');
+                    setSelectedArticle(null);
+                    setSelectedGuideline(null);
+                  }}
+                  className={`w-7 h-7 flex items-center justify-center rounded-md font-bold transition-all cursor-pointer text-xs shadow-2xs ${
+                    activeKho === 'CC'
+                      ? 'bg-blue-600 text-white shadow-xs ring-2 ring-blue-400/40'
+                      : 'bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100'
+                  }`}
+                  title={`Kho Công cụ & Thang điểm (${khoSummaries.find((k) => k.code === 'CC')?.articleCount || 19})`}
+                  aria-label="Kho Công cụ"
+                >
+                  <span>🧮</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveKho('ICD10');
+                    setSelectedArticle(null);
+                    setSelectedGuideline(null);
+                  }}
+                  className={`w-7 h-7 flex items-center justify-center rounded-md font-bold transition-all cursor-pointer text-xs shadow-2xs ${
+                    activeKho === 'ICD10'
+                      ? 'bg-slate-700 text-white shadow-xs ring-2 ring-slate-400/40'
+                      : 'bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200'
+                  }`}
+                  title={`Kho ICD-10 & BHYT (${khoSummaries.find((k) => k.code === 'ICD10')?.articleCount || 11})`}
+                  aria-label="Kho ICD-10"
+                >
+                  <span>🏷️</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveKho('CDSS');
+                    setSelectedArticle(null);
+                    setSelectedGuideline(null);
+                    setSelectedSyndrome(null);
+                  }}
+                  className={`w-7 h-7 flex items-center justify-center rounded-md font-bold transition-all cursor-pointer text-xs shadow-2xs ${
+                    activeKho === 'CDSS'
+                      ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400/40'
+                      : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                  }`}
+                  title={`Kho CDSS Hỗ trợ ra quyết định (${khoSummaries.find((k) => k.code === 'CDSS')?.articleCount || 4})`}
+                  aria-label="Kho CDSS"
+                >
+                  <span>⚡</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveKho('SYNDROME');
+                    setSelectedArticle(null);
+                    setSelectedGuideline(null);
+                    setSelectedSyndrome(null);
+                  }}
+                  className={`w-7 h-7 flex items-center justify-center rounded-md font-bold transition-all cursor-pointer text-xs shadow-2xs ${
+                    activeKho === 'SYNDROME'
+                      ? 'bg-purple-600 text-white shadow-xs ring-2 ring-purple-400/40'
+                      : 'bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100'
+                  }`}
+                  title={`Kho Hội chứng Lâm sàng (${ALL_SYNDROMES.length} hội chứng)`}
+                  aria-label="Kho Hội chứng"
+                >
+                  <span>🧠</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Kho Filter Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar pt-1">
+              <button
+                onClick={() => {
+                  setActiveKho('ALL');
+                  setSelectedArticle(null);
+                  setSelectedGuideline(null);
+                }}
+                className={`px-2.5 py-1 rounded-md font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  activeKho === 'ALL'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                Tất cả Kho ({khoSummaries.reduce((a, b) => a + b.articleCount, 0)})
+              </button>
+              <button
+                onClick={() => {
+                  setActiveKho('GUIDELINE');
+                  setSelectedArticle(null);
+                  setSelectedGuideline(null);
+                }}
+                className={`px-2.5 py-1 rounded-md font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  activeKho === 'GUIDELINE'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100'
+                }`}
+              >
+                Khuyến cáo EBM ({GUIDELINE_STUDIES.length})
+              </button>
+              <button
+                onClick={() => {
+                  setActiveKho('SYNDROME');
+                  setSelectedArticle(null);
+                  setSelectedGuideline(null);
+                  setSelectedSyndrome(null);
+                }}
+                className={`px-2.5 py-1 rounded-md font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  activeKho === 'SYNDROME'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'bg-purple-50 border border-purple-200 text-purple-800 hover:bg-purple-100'
+                }`}
+              >
+                🧠 Hội chứng ({ALL_SYNDROMES.length})
+              </button>
+              {khoSummaries.map((k) => (
+                <button
+                  key={k.code}
+                  onClick={() => {
+                    setActiveKho(k.code);
+                    setSelectedArticle(null);
+                    setSelectedGuideline(null);
+                    setSelectedSyndrome(null);
+                  }}
+                  className={`px-2.5 py-1 rounded-md font-medium whitespace-nowrap transition-all cursor-pointer ${
+                    activeKho === k.code
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {k.name} ({k.articleCount})
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Body Content */}
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+            {selectedSyndrome ? (
+              /* Syndrome Detail View */
+              <div className="flex flex-col gap-4 bg-white border border-slate-200 rounded-xl p-5 shadow-xs animate-fadeIn">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <button
+                    onClick={() => setSelectedSyndrome(null)}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors cursor-pointer"
+                  >
+                    ← Quay lại danh sách Hội chứng ({syndromeResults.length} hội chứng)
+                  </button>
+                  <span className="text-xs text-slate-400 font-mono">
+                    ID: {selectedSyndrome.id}
+                  </span>
+                </div>
+
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span className="px-2 py-0.5 rounded text-[11px] font-bold text-white bg-purple-600">
+                      HỘI CHỨNG LÂM SÀNG
+                    </span>
+                    {selectedSyndrome.tenVietTat && (
+                      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                        {selectedSyndrome.tenVietTat}
+                      </span>
+                    )}
+                    {selectedSyndrome.chuyenKhoa && (
+                      <span className="px-2 py-0.5 bg-blue-50 border border-blue-200 text-blue-800 rounded text-[11px] font-semibold">
+                        {selectedSyndrome.chuyenKhoa}
+                      </span>
+                    )}
+                    {selectedSyndrome.icdRelated && selectedSyndrome.icdRelated.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] text-slate-400 font-mono">ICD-10:</span>
+                        {selectedSyndrome.icdRelated.slice(0, 4).map((code) => (
+                          <span
+                            key={code}
+                            className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 text-[10.5px] font-mono font-semibold"
+                          >
+                            {code}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <h3 className="text-base sm:text-lg font-bold text-slate-800 leading-snug">
+                    {selectedSyndrome.ten}
+                  </h3>
+                </div>
+
+                {/* Mô tả */}
+                <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs leading-relaxed text-slate-700">
+                  <strong className="text-slate-800 block mb-1">Mô tả khái quát:</strong>
+                  {selectedSyndrome.moTa}
+                </div>
+
+                {/* Cơ chế sinh lý bệnh */}
+                {selectedSyndrome.coChe && (
+                  <div className="p-3.5 bg-purple-50/60 rounded-lg border border-purple-200 text-xs leading-relaxed text-purple-950">
+                    <strong className="text-purple-900 block mb-1">🧠 Cơ chế bệnh sinh (Pathophysiology):</strong>
+                    {selectedSyndrome.coChe}
+                  </div>
+                )}
+
+                {/* Tiêu chí triệu chứng & Ngưỡng đạt */}
+                <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+                  <div className="flex items-center justify-between mb-2">
+                    <strong className="text-slate-800">
+                      Triệu chứng thành phần ({selectedSyndrome.trieuChung.length} dấu hiệu):
+                    </strong>
+                    <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200">
+                      Ngưỡng xác lập: ≥ {selectedSyndrome.nguong.n} triệu chứng
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedSyndrome.trieuChung.map((symId) => (
+                      <span
+                        key={symId}
+                        className="px-2 py-1 rounded bg-white border border-slate-200 text-slate-700 text-[11px]"
+                      >
+                        • {symId}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bệnh lý liên quan trong DocSpace */}
+                {selectedSyndrome.benhLienQuan && selectedSyndrome.benhLienQuan.length > 0 && (
+                  <div className="p-3.5 bg-blue-50/50 rounded-lg border border-blue-200 text-xs">
+                    <strong className="text-blue-900 block mb-2">
+                      🔗 Bệnh lý liên quan trong DocSpace ({selectedSyndrome.benhLienQuan.length} bệnh):
+                    </strong>
+                    <div className="flex flex-col gap-2">
+                      {selectedSyndrome.benhLienQuan.map((b) => (
+                        <div
+                          key={b.benhSlug}
+                          className="p-2.5 bg-white border border-blue-100 rounded-md flex flex-col gap-1"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-blue-950">{b.benhTen}</span>
+                            <span
+                              className={`px-1.5 py-0.2 rounded text-[10px] font-bold uppercase ${
+                                b.loaiLienKet === 'dac_trung'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : b.loaiLienKet === 'bien_chung'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-slate-100 text-slate-700'
+                              }`}
+                            >
+                              {b.loaiLienKet === 'dac_trung'
+                                ? 'Đặc trưng'
+                                : b.loaiLienKet === 'bien_chung'
+                                ? 'Biến chứng'
+                                : 'Thường gặp'}
+                            </span>
+                          </div>
+                          {b.moTaLienKet && (
+                            <p className="text-slate-600 text-[11px] leading-relaxed">
+                              {b.moTaLienKet}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Hạt ngọc lâm sàng */}
+                {selectedSyndrome.diemClinicalPearl && selectedSyndrome.diemClinicalPearl.length > 0 && (
+                  <div className="p-3.5 bg-amber-50/70 rounded-lg border border-amber-200 text-xs leading-relaxed text-amber-950">
+                    <strong className="text-amber-900 block mb-1.5">💎 Hạt ngọc lâm sàng (Clinical Pearls):</strong>
+                    <ul className="list-disc list-inside space-y-1">
+                      {selectedSyndrome.diemClinicalPearl.map((pearl, i) => (
+                        <li key={i}>{pearl}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Chẩn đoán phân biệt */}
+                {selectedSyndrome.chanDoanPhanBiet && selectedSyndrome.chanDoanPhanBiet.length > 0 && (
+                  <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-700">
+                    <strong className="text-slate-800 block mb-1.5">⚖️ Chẩn đoán phân biệt then chốt:</strong>
+                    <div className="space-y-1.5">
+                      {selectedSyndrome.chanDoanPhanBiet.map((diff, i) => {
+                        if (typeof diff === 'string') return <div key={i}>• {diff}</div>;
+                        return (
+                          <div key={i} className="p-2 bg-white border border-slate-100 rounded">
+                            <span className="font-bold text-slate-800">{diff.ten}:</span>{' '}
+                            <span className="text-slate-600">{diff.diemPhanBiet}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : selectedGuideline ? (
+              /* Guideline Detail Preview View */
+              <div className="flex flex-col gap-4 bg-white border border-slate-200 rounded-xl p-5 shadow-xs animate-fadeIn">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <button
+                    onClick={() => setSelectedGuideline(null)}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-800 transition-colors cursor-pointer"
+                  >
+                    ← Quay lại danh sách Guidelines ({guidelineResults.length} bài)
+                  </button>
+
+                  <a
+                    href={getGuidelineWebUrl(selectedGuideline)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-rose-600 transition-colors"
+                  >
+                    <span>Mở Chuyên Trang Guidelines</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+
+                <div>
+                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                    <span className="px-2 py-0.5 rounded text-[11px] font-bold text-white bg-rose-600 uppercase tracking-wider">
+                      {selectedGuideline.organization} ({selectedGuideline.year})
+                    </span>
+                    {selectedGuideline.impact === 'practice-changing' && (
+                      <span className="px-2 py-0.5 bg-amber-50 border border-amber-200 text-amber-800 rounded text-[11px] font-semibold">
+                        Practice-Changing
+                      </span>
+                    )}
+                    {selectedGuideline.icd10Codes && selectedGuideline.icd10Codes.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] text-slate-400 font-mono">ICD-10:</span>
+                        {selectedGuideline.icd10Codes.map((code) => (
+                          <span
+                            key={code}
+                            className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 text-[10.5px] font-mono font-semibold"
+                          >
+                            {code}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <h3 className="text-base sm:text-lg font-bold text-slate-800 leading-snug">
+                    {selectedGuideline.title}
+                  </h3>
+                </div>
+
+                <div className="p-3.5 bg-amber-50/60 rounded-lg border border-amber-200 text-xs leading-relaxed text-amber-950">
+                  <strong className="text-amber-800 block mb-1">Kết quả then chốt & Khuyến cáo thực hành:</strong>
+                  {selectedGuideline.keyResults || selectedGuideline.summary}
+                </div>
+
+                {selectedGuideline.intervention && (
+                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs leading-relaxed text-slate-700">
+                    <strong className="text-slate-800 block mb-1">Chiến lược can thiệp / Phác đồ chuẩn:</strong>
+                    {selectedGuideline.intervention}
+                  </div>
+                )}
+
+                {selectedGuideline.drug && (
+                  <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 text-xs text-slate-700">
+                    <strong className="text-blue-900 block mb-1">Thuốc & Hoạt chất khuyến cáo:</strong>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {selectedGuideline.drug.split(',').map((d, i) => (
+                        <span key={i} className="px-2 py-0.5 bg-white border border-blue-200 rounded text-[11px] font-mono text-blue-900">
+                          {d.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2 flex items-center gap-3">
+                  <a
+                    href={getGuidelineWebUrl(selectedGuideline)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-xs transition-colors"
+                  >
+                    <span>Đọc toàn văn khuyến cáo trong Kho EBM Guidelines</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            ) : selectedArticle ? (
+              /* Article Detail Preview View */
+              <div className="flex flex-col gap-4 bg-white border border-slate-200 rounded-xl p-5 shadow-xs animate-fadeIn">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <button
+                    onClick={() => setSelectedArticle(null)}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
+                  >
+                    ← Quay lại danh sách ({total} bài viết)
+                  </button>
+
+                  <a
+                    href={getKnowledgeVaultWebUrl(selectedArticle.id)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-blue-600 transition-colors"
+                  >
+                    <span>Mở trong Vault Hub</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span
+                      className="px-2 py-0.5 rounded text-[11px] font-bold text-white uppercase tracking-wider"
+                      style={{
+                        backgroundColor:
+                          KHO_DEFINITIONS[selectedArticle.khoCode]?.color || '#0284c7',
+                      }}
+                    >
+                      {selectedArticle.khoName}
+                    </span>
+                    <span className="px-2 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded text-[11px] font-medium">
+                      {selectedArticle.specialty}
+                    </span>
+                    <span className="flex items-center gap-1 text-[11px] text-slate-400 font-mono">
+                      <Clock className="w-3 h-3" />
+                      {selectedArticle.readTime}
+                    </span>
+                  </div>
+
+                  <h3 className="text-lg font-bold text-slate-800 leading-snug">
+                    {selectedArticle.title}
+                  </h3>
+
+                  {selectedArticle.icd10 && selectedArticle.icd10.length > 0 && (
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <span className="text-xs font-semibold text-slate-500">Mã ICD-10:</span>
+                      {selectedArticle.icd10.map((code) => (
+                        <span
+                          key={code}
+                          className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-mono font-semibold"
+                        >
+                          {code}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs leading-relaxed text-slate-700 whitespace-pre-line">
+                  {selectedArticle.snippet || 'Tóm tắt bài viết đang được cập nhật...'}
+                </div>
+
+                {selectedArticle.keywords && selectedArticle.keywords.length > 0 && (
+                  <div>
+                    <div className="text-xs font-bold text-slate-600 mb-1.5 flex items-center gap-1">
+                      <Tag className="w-3 h-3 text-slate-400" />
+                      Từ khóa tra cứu liên quan:
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedArticle.keywords.map((kw, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[11px]"
+                        >
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2 flex items-center gap-3">
+                  <a
+                    href={getKnowledgeVaultWebUrl(selectedArticle.id)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-xs transition-colors"
+                  >
+                    <span>Đọc toàn văn bài viết trong Knowledge Vault</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            ) : activeKho === 'SYNDROME' ? (
+              /* Syndromes List */
+              <div className="flex flex-col gap-2.5">
+                <div className="flex items-center justify-between text-xs text-slate-500 px-1">
+                  <span>
+                    Hiển thị <b>{syndromeResults.length}</b> / {ALL_SYNDROMES.length} hội chứng lâm sàng
+                  </span>
+                  <span className="font-semibold text-purple-600">
+                    Kho: Hội Chứng Lâm Sàng
+                  </span>
+                </div>
+
+                {syndromeResults.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-slate-400">
+                    <BookOpen className="w-10 h-10 stroke-1 mb-2 text-slate-300" />
+                    <p className="text-sm font-semibold text-slate-600">
+                      Không tìm thấy Hội chứng phù hợp với từ khóa "{searchTerm}"
+                    </p>
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="mt-3 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition-colors"
+                    >
+                      Xem toàn bộ {ALL_SYNDROMES.length} Hội chứng
+                    </button>
+                  </div>
+                ) : (
+                  syndromeResults.map((hc) => (
+                    <div
+                      key={hc.id}
+                      onClick={() => setSelectedSyndrome(hc)}
+                      className="p-3.5 bg-white hover:bg-purple-50/40 border border-slate-200 hover:border-purple-300 rounded-lg transition-all cursor-pointer group shadow-2xs"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold text-white bg-purple-600">
+                              {hc.chuyenKhoa || 'Chung'}
+                            </span>
+                            {hc.tenVietTat && (
+                              <span className="px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200 text-[10px] font-bold">
+                                {hc.tenVietTat}
+                              </span>
+                            )}
+                            <span className="px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold">
+                              Ngưỡng: ≥ {hc.nguong.n}/{hc.trieuChung.length} TC
+                            </span>
+                            {hc.benhLienQuan && (
+                              <span className="px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-semibold">
+                                {hc.benhLienQuan.length} bệnh liên quan
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="text-sm font-bold text-slate-800 group-hover:text-purple-700 transition-colors">
+                            {hc.ten}
+                          </h4>
+
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                            {hc.coChe || hc.moTa}
+                          </p>
+                        </div>
+
+                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all shrink-0 mt-2" />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : activeKho === 'GUIDELINE' ? (
+              /* Guidelines List */
+              <div className="flex flex-col gap-2.5">
+                <div className="flex items-center justify-between text-xs text-slate-500 px-1">
+                  <span>
+                    Hiển thị <b>{guidelineResults.length}</b> văn bản Khuyến cáo & RCTs
+                  </span>
+                  <span className="font-semibold text-rose-600">
+                    Kho: Hướng Dẫn EBM Lâm Sàng
+                  </span>
+                </div>
+
+                {guidelineResults.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-slate-400">
+                    <BookOpen className="w-10 h-10 stroke-1 mb-2 text-slate-300" />
+                    <p className="text-sm font-semibold text-slate-600">
+                      Không tìm thấy Guideline phù hợp với từ khóa "{searchTerm}"
+                    </p>
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="mt-3 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition-colors"
+                    >
+                      Xem toàn bộ 78 Guidelines
+                    </button>
+                  </div>
+                ) : (
+                  guidelineResults.map((study) => (
+                    <div
+                      key={study.id}
+                      onClick={() => setSelectedGuideline(study)}
+                      className="p-3.5 bg-white hover:bg-rose-50/40 border border-slate-200 hover:border-rose-300 rounded-lg transition-all cursor-pointer group shadow-2xs"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold text-white bg-rose-600">
+                              {study.organization}
+                            </span>
+                            <span className="text-[11px] font-mono text-slate-500 font-semibold">
+                              {study.year}
+                            </span>
+                            {study.impact === 'practice-changing' && (
+                              <span className="px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold">
+                                Practice-Changing
+                              </span>
+                            )}
+                            {study.icd10Codes && study.icd10Codes[0] && (
+                              <span className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 text-[10px] font-mono font-semibold">
+                                ICD: {study.icd10Codes.slice(0, 3).join(', ')}
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="text-sm font-bold text-slate-800 group-hover:text-rose-600 transition-colors line-clamp-2">
+                            {study.title}
+                          </h4>
+
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                            {study.keyResults || study.summary}
+                          </p>
+                        </div>
+
+                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-rose-600 group-hover:translate-x-0.5 transition-all shrink-0 mt-2" />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : results.length === 0 ? (
+              /* Empty State */
+              <div className="flex flex-col items-center justify-center py-16 text-center text-slate-400">
+                <BookOpen className="w-10 h-10 stroke-1 mb-2 text-slate-300" />
+                <p className="text-sm font-semibold text-slate-600">
+                  Không tìm thấy bài viết phù hợp
+                </p>
+                <p className="text-xs text-slate-400 mt-1 max-w-xs">
+                  Thử tìm kiếm với từ khóa khác hoặc chọn xem "Tất cả Kho"
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setActiveKho('ALL');
+                  }}
+                  className="mt-3 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition-colors"
+                >
+                  Xóa bộ lọc
+                </button>
+              </div>
+            ) : (
+              /* Articles List */
+              <div className="flex flex-col gap-2.5">
+                <div className="flex items-center justify-between text-xs text-slate-500 px-1">
+                  <span>
+                    Hiển thị <b>{results.length}</b> / {total} bài viết y khoa
+                  </span>
+                  {activeKho !== 'ALL' && (
+                    <span className="font-semibold text-blue-600">
+                      Kho: {KHO_DEFINITIONS[activeKho]?.name}
+                    </span>
+                  )}
+                </div>
+
+                {/* Khuyến cáo EBM khớp nhanh nếu đang tìm kiếm ở Tất cả kho */}
+                {activeKho === 'ALL' && searchTerm.trim().length >= 2 && guidelineResults.length > 0 && (
+                  <div className="p-3 bg-gradient-to-r from-rose-50 to-amber-50 border border-rose-200 rounded-lg flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">📚</span>
+                      <div>
+                        <div className="text-xs font-bold text-rose-900">
+                          Tìm thấy {guidelineResults.length} Khuyến cáo EBM khớp với "{searchTerm}"
+                        </div>
+                        <div className="text-[11px] text-rose-700 line-clamp-1">
+                          {guidelineResults[0].title}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setActiveKho('GUIDELINE')}
+                      className="px-2.5 py-1 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded transition-colors whitespace-nowrap cursor-pointer"
+                    >
+                      Xem Guidelines &rarr;
+                    </button>
+                  </div>
+                )}
+
+                {/* Hội chứng lâm sàng khớp nhanh nếu đang tìm kiếm ở Tất cả kho */}
+                {activeKho === 'ALL' && searchTerm.trim().length >= 2 && syndromeResults.length > 0 && (
+                  <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg flex items-center justify-between gap-2 shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🧠</span>
+                      <div>
+                        <div className="text-xs font-bold text-purple-950">
+                          Tìm thấy {syndromeResults.length} Hội chứng lâm sàng khớp với "{searchTerm}"
+                        </div>
+                        <div className="text-[11px] text-purple-800 line-clamp-1">
+                          {syndromeResults[0].ten} ({syndromeResults[0].chuyenKhoa || 'Chung'})
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setActiveKho('SYNDROME')}
+                      className="px-2.5 py-1 text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors whitespace-nowrap cursor-pointer shadow-2xs"
+                    >
+                      Xem Hội chứng &rarr;
+                    </button>
+                  </div>
+                )}
+
+                {/* Khi mở Kho CDSS: Hiển thị 9 trạm công cụ CDSS lâm sàng tương tác độc lập */}
+                {activeKho === 'CDSS' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2.5">
+                    <div
+                      onClick={() => {
+                        if (onOpenCdssModal) {
+                          onOpenCdssModal('dengue');
+                          onClose();
+                        } else {
+                          window.open(getCdssAppUrl('dengue'), '_blank');
+                        }
+                      }}
+                      className="p-3 bg-gradient-to-br from-blue-50 to-slate-50 hover:from-blue-100/70 hover:to-slate-100 border border-blue-200 rounded-lg transition-all flex flex-col justify-between group shadow-2xs text-left cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-blue-700 bg-blue-100 border border-blue-300">
+                          BYT QĐ 2760
+                        </span>
+                        <a
+                          href={getCdssAppUrl('dengue')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-blue-500 hover:text-blue-700 rounded hover:bg-blue-100/80 transition-colors"
+                          title="Mở tab riêng"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                        1. CDSS Dịch Truyền SXHD Dengue
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                        Tính cọc dịch 4 cột động học, hiệu chỉnh cân nặng CDC 2014 và pha vận mạch.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        if (onOpenCdssModal) {
+                          onOpenCdssModal('ecg');
+                          onClose();
+                        } else {
+                          window.open(getCdssAppUrl('ecg'), '_blank');
+                        }
+                      }}
+                      className="p-3 bg-gradient-to-br from-red-50 to-amber-50/40 hover:from-red-100/70 hover:to-amber-100/60 border border-red-200 rounded-lg transition-all flex flex-col justify-between group shadow-2xs text-left cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-red-700 bg-red-100 border border-red-300">
+                          12-Lead Canvas
+                        </span>
+                        <a
+                          href={getCdssAppUrl('ecg')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-red-500 hover:text-red-700 rounded hover:bg-red-100/80 transition-colors"
+                          title="Mở tab riêng"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-red-700 transition-colors">
+                        2. CDSS Phân Tích ECG 12 Đạo Trình
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                        Vẽ sóng trực quan, đo trục, QTc, phân tích hội chứng vành cấp STEMI và loạn nhịp.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        if (onOpenCdssModal) {
+                          onOpenCdssModal('abg');
+                          onClose();
+                        } else {
+                          window.open(getCdssAppUrl('abg'), '_blank');
+                        }
+                      }}
+                      className="p-3 bg-gradient-to-br from-blue-50 to-slate-50 hover:from-blue-100/70 hover:to-slate-100 border border-blue-200 rounded-lg transition-all flex flex-col justify-between group shadow-2xs text-left cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-blue-700 bg-blue-100 border border-blue-300">
+                          6-Step Analysis
+                        </span>
+                        <a
+                          href={getCdssAppUrl('abg')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-blue-500 hover:text-blue-700 rounded hover:bg-blue-100/80 transition-colors"
+                          title="Mở tab riêng"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                        3. CDSS Khí Máu Động Mạch (ABG Pro)
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                        Đánh giá toan kiềm 6 bước, Anion Gap hiệu chỉnh Albumin, Delta-Delta, P/F và SOAP format.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        if (onOpenCdssModal) {
+                          onOpenCdssModal('xray');
+                          onClose();
+                        } else {
+                          window.open(getCdssAppUrl('xray'), '_blank');
+                        }
+                      }}
+                      className="p-3 bg-gradient-to-br from-slate-100 to-slate-50 hover:from-slate-200/70 hover:to-slate-100 border border-slate-300 rounded-lg transition-all flex flex-col justify-between group shadow-2xs text-left cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-800 bg-slate-200 border border-slate-300">
+                          PACS Workstation
+                        </span>
+                        <a
+                          href={getCdssAppUrl('xray')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-slate-600 hover:text-slate-900 rounded hover:bg-slate-200 transition-colors"
+                          title="Mở tab riêng"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                        4. CDSS Phân Tích X-Quang (RadAI)
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                        Trạm đọc PACS ngực & bụng, phát hiện đông đặc, tràn khí, bóng tim, tắc ruột và xuất SOAP.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        if (onOpenCdssModal) {
+                          onOpenCdssModal('hepa');
+                          onClose();
+                        } else {
+                          window.open(getCdssAppUrl('hepa'), '_blank');
+                        }
+                      }}
+                      className="p-3 bg-gradient-to-br from-emerald-50 to-slate-50 hover:from-emerald-100/70 hover:to-slate-100 border border-emerald-200 rounded-lg transition-all flex flex-col justify-between group shadow-2xs text-left cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300">
+                          ACG &amp; WHO
+                        </span>
+                        <a
+                          href={getCdssAppUrl('hepa')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-emerald-500 hover:text-emerald-700 rounded hover:bg-emerald-100/80 transition-colors"
+                          title="Mở tab riêng"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                        5. CDSS Sinh Hóa Gan (HepaCDSS)
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                        Phân tích tổn thương gan, tính R-ratio, De Ritis, FIB-4, APRI, MELD-Na, Child-Pugh &amp; DILI.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        if (onOpenCdssModal) {
+                          onOpenCdssModal('neuro');
+                          onClose();
+                        } else {
+                          window.open(getCdssAppUrl('neuro'), '_blank');
+                        }
+                      }}
+                      className="p-3 bg-gradient-to-br from-amber-50 to-slate-50 hover:from-amber-100/70 hover:to-slate-100 border border-amber-200 rounded-lg transition-all flex flex-col justify-between group shadow-2xs text-left cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-amber-700 bg-amber-100 border border-amber-300">
+                          Mô Phỏng 2D/3D
+                        </span>
+                        <a
+                          href={getCdssAppUrl('neuro')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-amber-500 hover:text-amber-700 rounded hover:bg-amber-100/80 transition-colors"
+                          title="Mở tab riêng"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-amber-700 transition-colors">
+                        6. CDSS Khám Thần Kinh (NeuroExam)
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                        Mô phỏng phản xạ đồng tử, vận nhãn, khoanh da, dáng đi, thoát vị não &amp; thang điểm NIHSS/GCS.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        if (onOpenCdssModal) {
+                          onOpenCdssModal('microbio');
+                          onClose();
+                        } else {
+                          window.open(getCdssAppUrl('microbio'), '_blank');
+                        }
+                      }}
+                      className="p-3 bg-gradient-to-br from-emerald-50 to-slate-50 hover:from-emerald-100/70 hover:to-slate-100 border border-emerald-200 rounded-lg transition-all flex flex-col justify-between group shadow-2xs text-left cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300">
+                          Mahon 6th &amp; CLSI
+                        </span>
+                        <a
+                          href={getCdssAppUrl('microbio')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-emerald-500 hover:text-emerald-700 rounded hover:bg-emerald-100/80 transition-colors"
+                          title="Mở tab riêng"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                        7. CDSS Vi Sinh &amp; Định Danh (Mahon)
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                        Định danh 50+ vi khuẩn, ma trận kháng sinh đồ AST/CLSI M100, kính hiển vi và xuất báo cáo SOAP.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        if (onOpenCdssModal) {
+                          onOpenCdssModal('antibiotic');
+                          onClose();
+                        } else {
+                          window.open(getCdssAppUrl('antibiotic'), '_blank');
+                        }
+                      }}
+                      className="p-3 bg-gradient-to-br from-blue-50 to-slate-50 hover:from-blue-100/70 hover:to-slate-100 border border-blue-200 rounded-lg transition-all flex flex-col justify-between group shadow-2xs text-left cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-blue-700 bg-blue-100 border border-blue-300">
+                          WHO AWaRe &amp; Sanford
+                        </span>
+                        <a
+                          href={getCdssAppUrl('antibiotic')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-blue-500 hover:text-blue-700 rounded hover:bg-blue-100/80 transition-colors"
+                          title="Mở tab riêng"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                        8. CDSS Liều Kháng Sinh &amp; Suy Thận
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                        Hiệu chỉnh liều theo CrCl Cockcroft-Gault, eGFR CKD-EPI, lọc máu HD/CRRT, cảnh báo tương tác DDI.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        if (onOpenCdssModal) {
+                          onOpenCdssModal('vancomycin');
+                          onClose();
+                        } else {
+                          window.open(getCdssAppUrl('vancomycin'), '_blank');
+                        }
+                      }}
+                      className="p-3 bg-gradient-to-br from-blue-50 to-emerald-50/30 hover:from-blue-100/70 hover:to-emerald-100/60 border border-blue-200 rounded-lg transition-all flex flex-col justify-between group shadow-2xs text-left cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-blue-700 bg-blue-100 border border-blue-300">
+                          ASHP 2020 &amp; TDM
+                        </span>
+                        <a
+                          href={getCdssAppUrl('vancomycin')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-blue-500 hover:text-blue-700 rounded hover:bg-blue-100/80 transition-colors"
+                          title="Mở tab riêng"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                        9. CDSS Quản Lý Liều Vancomycin (ASHP 2020)
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                        Tính liều nạp, liều duy trì, chỉnh liều béo phì (Zhang 2024), lọc máu IHD, nồng độ đáy Trough &amp; TDM AUC24/MIC.
+                      </p>
+                    </div>
+
+                    {/* 10. CDSS Sepsis */}
+                    <div
+                      onClick={() => {
+                        if (onOpenCdssModal) {
+                          onOpenCdssModal('sepsis');
+                          onClose();
+                        } else {
+                          window.open(getCdssAppUrl('sepsis'), '_blank');
+                        }
+                      }}
+                      className="p-3 bg-gradient-to-br from-red-50 to-amber-50/30 hover:from-red-100/70 hover:to-amber-100/60 border border-red-200 rounded-lg transition-all flex flex-col justify-between group shadow-2xs text-left cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-red-700 bg-red-100 border border-red-300">
+                          NICE 2024 &amp; Sepsis-3
+                        </span>
+                        <a
+                          href={getCdssAppUrl('sepsis')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-red-500 hover:text-red-700 rounded hover:bg-red-100/80 transition-colors"
+                          title="Mở tab riêng"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-red-700 transition-colors">
+                        10. Phân Tầng Nguy Cơ Sepsis &amp; Sốc Nhiễm Khuẩn
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                        Sàng lọc đa phương thức NICE 2024, Sepsis-3 (SOFA/qSOFA), Phoenix 2024 (Nhi khoa) và tỷ số NLR.
+                      </p>
+                    </div>
+
+                    {/* 11. CDSS Inpatient Exam & Approach */}
+                    <div
+                      onClick={() => {
+                        if (onOpenCdssModal) {
+                          onOpenCdssModal('inpatient');
+                          onClose();
+                        } else {
+                          window.open(getCdssAppUrl('inpatient'), '_blank');
+                        }
+                      }}
+                      className="p-3 bg-gradient-to-br from-teal-50 to-emerald-50/30 hover:from-teal-100/70 hover:to-emerald-100/60 border border-teal-200 rounded-lg transition-all flex flex-col justify-between group shadow-2xs text-left cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-teal-700 bg-teal-100 border border-teal-300">
+                          Bates &amp; Macleod
+                        </span>
+                        <a
+                          href={getCdssAppUrl('inpatient')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-teal-500 hover:text-teal-700 rounded hover:bg-teal-100/80 transition-colors"
+                          title="Mở tab riêng"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
+                        11. Khám Lâm Sàng &amp; Tiếp Cận Bệnh Nội Trú
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                        Cẩm nang khám lâm sàng hệ thống Bates &amp; Macleod, tiếp cận hội chứng nội trú, hỏi bệnh sử 7 thuộc tính và tra cứu nhanh ⌘K.
+                      </p>
+                    </div>
+
+                    {/* 12. CDSS DiaCare Inpatient Glycemic Management */}
+                    <div
+                      onClick={() => {
+                        if (onOpenCdssModal) {
+                          onOpenCdssModal('diacare');
+                          onClose();
+                        } else {
+                          window.open(getCdssAppUrl('diacare'), '_blank');
+                        }
+                      }}
+                      className="p-3 bg-gradient-to-br from-emerald-50 to-teal-50/30 hover:from-emerald-100/70 hover:to-teal-100/60 border border-emerald-200 rounded-lg transition-all flex flex-col justify-between group shadow-2xs text-left cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300">
+                          ADA 2026 &amp; JBDS
+                        </span>
+                        <a
+                          href={getCdssAppUrl('diacare')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-emerald-500 hover:text-emerald-700 rounded hover:bg-emerald-100/80 transition-colors"
+                          title="Mở tab riêng"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                        12. Quản Lý Insulin &amp; Đường Huyết Nội Viện (DiaCare)
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                        Tự động tính liều insulin Basal-Bolus, hiệu chỉnh suy gan/thận/béo phì, phác đồ trượt SSI và xử trí DKA/HHS theo ADA 2026.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {results.map((art) => {
+                  const khoColor = KHO_DEFINITIONS[art.khoCode]?.color || '#0284c7';
+                  return (
+                    <div
+                      key={art.id}
+                      onClick={() => setSelectedArticle(art)}
+                      className="p-3.5 bg-white hover:bg-blue-50/40 border border-slate-200 hover:border-blue-300 rounded-lg transition-all cursor-pointer group shadow-2xs"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                            <span
+                              className="px-1.5 py-0.2 rounded text-[10px] font-bold text-white"
+                              style={{ backgroundColor: khoColor }}
+                            >
+                              {art.khoCode}
+                            </span>
+                            <span className="text-[11px] font-medium text-slate-500">
+                              {art.specialty}
+                            </span>
+                            <span className="text-slate-300">·</span>
+                            <span className="text-[11px] text-slate-400 font-mono">
+                              {art.readTime}
+                            </span>
+                            {art.icd10 && art.icd10[0] && (
+                              <span className="px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-mono font-semibold">
+                                {art.icd10[0]}
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-1">
+                            {art.title}
+                          </h4>
+
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                            {art.snippet}
+                          </p>
+                        </div>
+
+                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0 mt-2" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="p-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] bg-white border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 shrink-0">
+            <span className="flex items-center gap-1 font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Vault & EBM Guidelines Live Sync
+            </span>
+            <div className="flex items-center gap-3">
+              <a
+                href={
+                  typeof window !== 'undefined' && window.location.pathname.includes('/src/content/docspace/')
+                    ? '../../../index.html#/ebm/kho-guidelines'
+                    : '../ebm/guidelines/guidelines.html'
+                }
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold text-amber-600 hover:text-amber-800 flex items-center gap-1"
+              >
+                <span>Kho Guidelines</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              <span className="text-slate-300">·</span>
+              <a
+                href="../knowledge-vault/index.html"
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+              >
+                <span>Vault Hub</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

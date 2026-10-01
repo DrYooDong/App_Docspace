@@ -1,0 +1,514 @@
+/**
+ * CliniPortal DocSpace — Epidemiology Context Database
+ * Kho Dữ Liệu Bối Cảnh Dịch Tễ Học Lâm Sàng & Phân Tích Tam Giác Chẩn Đoán
+ * Kết nối bối cảnh dịch tễ học với 30 Bệnh Lý Trọng Tâm
+ */
+
+import { EpidemiologyContext } from '../types.ts';
+
+export interface DiseaseEpidemiologyProfile {
+  diseaseId: string;
+  diseaseName: string;
+  icdCode: string;
+  specialty: string;
+  endemicAreas: string[];          // Vùng dịch tễ lưu hành (ĐBSCL, Tây Nguyên, Đô thị mật độ cao...)
+  peakSeasons: string[];           // Mùa dịch cao điểm (Mùa mưa, Đông Xuân, Quanh năm...)
+  vectors: string[];               // Véc-tơ truyền bệnh hoặc nguồn phơi nhiễm
+  occupationalRisks: string[];     // Nghề nghiệp có nguy cơ cao
+  foodWaterRisks: string[];        // Nguy cơ nguồn nước, thực phẩm
+  transmissionRoutes: string[];    // Đường truyền nhiễm
+  incubationPeriod: string;        // Thời gian ủ bệnh
+  highRiskPopulations: string[];   // Quần thể nguy cơ cao
+  outbreakPotential: 'high' | 'moderate' | 'low' | 'sporadic';
+  clinicalPearls: string;          // Đúc kết dịch tễ học then chốt
+}
+
+export const EPIDEMIOLOGY_DATABASE: Record<string, DiseaseEpidemiologyProfile> = {
+  sot_xuat_huyet: {
+    diseaseId: 'sot_xuat_huyet',
+    diseaseName: 'Sốt xuất huyết Dengue',
+    icdCode: 'A91',
+    specialty: 'Truyền Nhiễm',
+    endemicAreas: ['Đồng bằng sông Cửu Long', 'TP. Hồ Chí Minh', 'Miền Trung - Tây Nguyên', 'Đô thị đông dân cư nước đọng'],
+    peakSeasons: ['Mùa mưa (Tháng 5 – 11 ở miền Nam)', 'Mùa hè - thu (Miền Bắc)'],
+    vectors: ['Muỗi Aedes aegypti (muỗi vằn)', 'Muỗi Aedes albopictus'],
+    occupationalRisks: ['Người làm việc ngoài trời', 'Học sinh, sinh viên sống tại ký túc xá / khu trọ ẩm thấp'],
+    foodWaterRisks: ['Chum vại lu nước đọng quanh nhà không đậy nắp'],
+    transmissionRoutes: ['Muỗi vằn đốt truyền virus từ người sang người'],
+    incubationPeriod: '4 – 10 ngày (trung bình 5 – 7 ngày)',
+    highRiskPopulations: ['Trẻ em', 'Phụ nữ mang thai', 'Người béo phì (BMI > 25)', 'Người có bệnh nền tim mạch, ĐTĐ, suy thận'],
+    outbreakPotential: 'high',
+    clinicalPearls: 'Tại vùng dịch lưu hành, bất kỳ bệnh nhân nào sốt cao đột ngột 2-7 ngày đều phải cảnh giác Dengue trước tiên.'
+  },
+  sot_xuat_huyet_dengue: {
+    diseaseId: 'sot_xuat_huyet_dengue',
+    diseaseName: 'Sốt xuất huyết Dengue',
+    icdCode: 'A97',
+    specialty: 'Truyền Nhiễm',
+    endemicAreas: ['Đồng bằng sông Cửu Long', 'TP. Hồ Chí Minh', 'Miền Trung - Tây Nguyên', 'Đô thị đông dân cư nước đọng'],
+    peakSeasons: ['Mùa mưa (Tháng 5 – 11 ở miền Nam)', 'Mùa hè - thu (Miền Bắc)'],
+    vectors: ['Muỗi Aedes aegypti (muỗi vằn)', 'Muỗi Aedes albopictus'],
+    occupationalRisks: ['Người làm việc ngoài trời', 'Học sinh, sinh viên sống tại ký túc xá / khu trọ ẩm thấp'],
+    foodWaterRisks: ['Chum vại lu nước đọng quanh nhà không đậy nắp'],
+    transmissionRoutes: ['Muỗi vằn đốt truyền virus từ người sang người'],
+    incubationPeriod: '4 – 10 ngày (trung bình 5 – 7 ngày)',
+    highRiskPopulations: ['Trẻ em', 'Phụ nữ mang thai', 'Người béo phì (BMI > 25)', 'Người có bệnh nền tim mạch, ĐTĐ, suy thận'],
+    outbreakPotential: 'high',
+    clinicalPearls: 'Tại vùng dịch lưu hành, bất kỳ bệnh nhân nào sốt cao đột ngột 2-7 ngày đều phải cảnh giác Dengue trước tiên.'
+  },
+  vgsv_B: {
+    diseaseId: 'vgsv_B',
+    diseaseName: 'Viêm gan vi rút B mạn tính (CHB)',
+    icdCode: 'B18.1',
+    specialty: 'Truyền Nhiễm',
+    endemicAreas: ['Việt Nam là vùng dịch tễ lưu hành cao (tỷ lệ HBsAg ≥ 8-10% dân số)', 'Đồng bằng sông Hồng', 'Đồng bằng sông Cửu Long', 'Toàn quốc'],
+    peakSeasons: ['Quanh năm (Bệnh nhiễm vi rút mạn tính lưu hành quanh năm)'],
+    vectors: ['Không qua vector côn trùng; nguồn lây từ người mang vi rút HBV'],
+    occupationalRisks: ['Nhân viên y tế (phơi nhiễm kim tiêm/máu)', 'Thợ xăm trổ, thợ làm móng thẩm mỹ', 'Công nhân xây dựng, lao động nhập cư'],
+    foodWaterRisks: ['Không lây qua đường tiêu hóa hay nguồn nước thực phẩm'],
+    transmissionRoutes: ['Lây truyền từ mẹ sang con chu sinh (đường lây chính tại Việt Nam)', 'Lây qua đường máu và chế phẩm máu/dụng cụ tiêm chích', 'Quan hệ tình dục không an toàn'],
+    incubationPeriod: '30 – 180 ngày (trung bình 60 – 90 ngày) trước khi tiến triển mạn tính',
+    highRiskPopulations: ['Người sinh trước năm 2003 (chưa tiêm vắc xin HBV lúc sinh)', 'Người có mẹ hoặc người thân trực hệ mắc xơ gan hoặc ung thư gan (HCC)', 'Người tiêm chích ma túy', 'Bạn tình của người nhiễm HBV', 'Bệnh nhân lọc máu chu kỳ'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Việt Nam là vùng dịch tễ lưu hành cao HBV. Người nhiễm mạn có tiền sử gia đình xơ gan/HCC là đối tượng nguy cơ rất cao cần khởi trị NAs sớm để ngăn ngừa tử vong.'
+  },
+  vgsv_b: {
+    diseaseId: 'vgsv_b',
+    diseaseName: 'Viêm gan vi rút B mạn tính (CHB)',
+    icdCode: 'B18.1',
+    specialty: 'Truyền Nhiễm',
+    endemicAreas: ['Việt Nam là vùng dịch tễ lưu hành cao (tỷ lệ HBsAg ≥ 8-10% dân số)', 'Đồng bằng sông Hồng', 'Đồng bằng sông Cửu Long', 'Toàn quốc'],
+    peakSeasons: ['Quanh năm (Bệnh nhiễm vi rút mạn tính lưu hành quanh năm)'],
+    vectors: ['Không qua vector côn trùng; nguồn lây từ người mang vi rút HBV'],
+    occupationalRisks: ['Nhân viên y tế (phơi nhiễm kim tiêm/máu)', 'Thợ xăm trổ, thợ làm móng thẩm mỹ', 'Công nhân xây dựng, lao động nhập cư'],
+    foodWaterRisks: ['Không lây qua đường tiêu hóa hay nguồn nước thực phẩm'],
+    transmissionRoutes: ['Lây truyền từ mẹ sang con chu sinh (đường lây chính tại Việt Nam)', 'Lây qua đường máu và chế phẩm máu/dụng cụ tiêm chích', 'Quan hệ tình dục không an toàn'],
+    incubationPeriod: '30 – 180 ngày (trung bình 60 – 90 ngày) trước khi tiến triển mạn tính',
+    highRiskPopulations: ['Người sinh trước năm 2003 (chưa tiêm vắc xin HBV lúc sinh)', 'Người có mẹ hoặc người thân trực hệ mắc xơ gan hoặc ung thư gan (HCC)', 'Người tiêm chích ma túy', 'Bạn tình của người nhiễm HBV', 'Bệnh nhân lọc máu chu kỳ'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Việt Nam là vùng dịch tễ lưu hành cao HBV. Người nhiễm mạn có tiền sử gia đình xơ gan/HCC là đối tượng nguy cơ rất cao cần khởi trị NAs sớm để ngăn ngừa tử vong.'
+  },
+  vgsv_C: {
+    diseaseId: 'vgsv_C',
+    diseaseName: 'Viêm gan vi rút C mạn tính (HCV)',
+    icdCode: 'B18.2',
+    specialty: 'Truyền nhiễm',
+    endemicAreas: ['Việt Nam là vùng lưu hành dịch tễ của HCV (tỷ lệ 1-2% dân số chung)', 'Toàn quốc'],
+    peakSeasons: ['Quanh năm (Bệnh nhiễm vi rút mạn tính tiến triển âm thầm quanh năm)'],
+    vectors: ['Không qua vector côn trùng; lây truyền qua đường máu và dịch tiết cơ thể'],
+    occupationalRisks: ['Nhân viên y tế (phơi nhiễm kim tiêm/vết thương dính máu)', 'Thợ xăm hình nghệ thuật, thợ bấm lỗ tai, làm móng thẩm mỹ', 'Công nhân'],
+    foodWaterRisks: ['Không lây truyền qua thức ăn hay nguồn nước uống thông thường'],
+    transmissionRoutes: ['Lây qua đường máu (tiêm chích ma túy, truyền máu trước 1994, phẫu thuật/thủ thuật xâm lấn không an toàn, xăm mình)', 'Quan hệ tình dục không an toàn (đặc biệt MSM hoặc đồng nhiễm HIV)', 'Lây truyền từ mẹ sang con (tỷ lệ khoảng 5%)'],
+    incubationPeriod: '2 tuần đến 6 tháng trước khi chuyển sang giai đoạn mạn tính (> 6 tháng)',
+    highRiskPopulations: ['Người có tiền sử tiêm chích ma túy', 'Người từng truyền máu hoặc các chế phẩm máu trước năm 1994', 'Người xăm hình, xỏ khuyên tại cơ sở không vô trùng', 'Bệnh nhân lọc máu chu kỳ', 'Người nhiễm HIV', 'Trẻ sinh ra từ mẹ nhiễm HCV'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Anti-HCV dương tính chỉ phản ánh đã từng phơi nhiễm với HCV. Bắt buộc phải thực hiện định lượng HCV RNA hoặc HCVcAg để khẳng định vi rút đang nhân lên trước khi chỉ định phác đồ DAA. Tầm soát HCC mỗi 6 tháng ở xơ hóa F3-F4.'
+  },
+  vgsv_c: {
+    diseaseId: 'vgsv_c',
+    diseaseName: 'Viêm gan vi rút C mạn tính (HCV)',
+    icdCode: 'B18.2',
+    specialty: 'Truyền nhiễm',
+    endemicAreas: ['Việt Nam là vùng lưu hành dịch tễ của HCV (tỷ lệ 1-2% dân số chung)', 'Toàn quốc'],
+    peakSeasons: ['Quanh năm (Bệnh nhiễm vi rút mạn tính tiến triển âm thầm quanh năm)'],
+    vectors: ['Không qua vector côn trùng; lây truyền qua đường máu và dịch tiết cơ thể'],
+    occupationalRisks: ['Nhân viên y tế (phơi nhiễm kim tiêm/vết thương dính máu)', 'Thợ xăm hình nghệ thuật, thợ bấm lỗ tai, làm móng thẩm mỹ', 'Công nhân'],
+    foodWaterRisks: ['Không lây truyền qua thức ăn hay nguồn nước uống thông thường'],
+    transmissionRoutes: ['Lây qua đường máu (tiêm chích ma túy, truyền máu trước 1994, phẫu thuật/thủ thuật xâm lấn không an toàn, xăm mình)', 'Quan hệ tình dục không an toàn (đặc biệt MSM hoặc đồng nhiễm HIV)', 'Lây truyền từ mẹ sang con (tỷ lệ khoảng 5%)'],
+    incubationPeriod: '2 tuần đến 6 tháng trước khi chuyển sang giai đoạn mạn tính (> 6 tháng)',
+    highRiskPopulations: ['Người có tiền sử tiêm chích ma túy', 'Người từng truyền máu hoặc các chế phẩm máu trước năm 1994', 'Người xăm hình, xỏ khuyên tại cơ sở không vô trùng', 'Bệnh nhân lọc máu chu kỳ', 'Người nhiễm HIV', 'Trẻ sinh ra từ mẹ nhiễm HCV'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Anti-HCV dương tính chỉ phản ánh đã từng phơi nhiễm với HCV. Bắt buộc phải thực hiện định lượng HCV RNA hoặc HCVcAg để khẳng định vi rút đang nhân lên trước khi chỉ định phác đồ DAA. Tầm soát HCC mỗi 6 tháng ở xơ hóa F3-F4.'
+  },
+  'viem-gan-vi-rut-c-man': {
+    diseaseId: 'viem-gan-vi-rut-c-man',
+    diseaseName: 'Viêm gan vi rút C mạn tính (HCV)',
+    icdCode: 'B18.2',
+    specialty: 'Truyền nhiễm',
+    endemicAreas: ['Việt Nam là vùng lưu hành dịch tễ của HCV (tỷ lệ 1-2% dân số chung)', 'Toàn quốc'],
+    peakSeasons: ['Quanh năm (Bệnh nhiễm vi rút mạn tính tiến triển âm thầm quanh năm)'],
+    vectors: ['Không qua vector côn trùng; lây truyền qua đường máu và dịch tiết cơ thể'],
+    occupationalRisks: ['Nhân viên y tế (phơi nhiễm kim tiêm/vết thương dính máu)', 'Thợ xăm hình nghệ thuật, thợ bấm lỗ tai, làm móng thẩm mỹ', 'Công nhân'],
+    foodWaterRisks: ['Không lây truyền qua thức ăn hay nguồn nước uống thông thường'],
+    transmissionRoutes: ['Lây qua đường máu (tiêm chích ma túy, truyền máu trước 1994, phẫu thuật/thủ thuật xâm lấn không an toàn, xăm mình)', 'Quan hệ tình dục không an toàn (đặc biệt MSM hoặc đồng nhiễm HIV)', 'Lây truyền từ mẹ sang con (tỷ lệ khoảng 5%)'],
+    incubationPeriod: '2 tuần đến 6 tháng trước khi chuyển sang giai đoạn mạn tính (> 6 tháng)',
+    highRiskPopulations: ['Người có tiền sử tiêm chích ma túy', 'Người từng truyền máu hoặc các chế phẩm máu trước năm 1994', 'Người xăm hình, xỏ khuyên tại cơ sở không vô trùng', 'Bệnh nhân lọc máu chu kỳ', 'Người nhiễm HIV', 'Trẻ sinh ra từ mẹ nhiễm HCV'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Anti-HCV dương tính chỉ phản ánh đã từng phơi nhiễm với HCV. Bắt buộc phải thực hiện định lượng HCV RNA hoặc HCVcAg để khẳng định vi rút đang nhân lên trước khi chỉ định phác đồ DAA. Tầm soát HCC mỗi 6 tháng ở xơ hóa F3-F4.'
+  },
+  leptospira: {
+    diseaseId: 'leptospira',
+    diseaseName: 'Bệnh do Leptospira (Leptospirosis / Bệnh Weil)',
+    icdCode: 'A27',
+    specialty: 'Truyền nhiễm',
+    endemicAreas: ['Đồng bằng sông Cửu Long', 'Vùng trũng ngập lụt sau mưa bão', 'Nông thôn trồng lúa nước', 'Khu vực chăn nuôi gia súc toàn quốc'],
+    peakSeasons: ['Mùa mưa lũ, ngập lụt (Tháng 6 – Tháng 11)', 'Sau các đợt bão lũ, triều cường ngập úng đô thị và nông thôn'],
+    vectors: ['Chuột cống, chuột đồng (ổ chứa chính đào thải qua nước tiểu)', 'Gia súc: lợn, bò, chó'],
+    occupationalRisks: ['Nông dân làm ruộng nước', 'Công nhân nạo vét cống rãnh, vệ sinh môi trường', 'Người dọn dẹp sau bão lũ ngập lụt', 'Bác sĩ thú y, công nhân lò mổ gia súc'],
+    foodWaterRisks: ['Nguồn nước mặt sông ngòi, ao hồ tù đọng, cống rãnh ngập nước nhiễm nước tiểu chuột', 'Bơi lội hoặc lội nước ngập có vết thương hở ngoài da'],
+    transmissionRoutes: ['Xoắn khuẩn xâm nhập trực tiếp qua da trầy xước, niêm mạc mắt/mũi/miệng khi tiếp xúc nước hoặc đất ẩm bẩn', 'Hiếm gặp: Lây qua đường tiêu hóa do uống nước nhiễm xoắn khuẩn'],
+    incubationPeriod: '2 – 30 ngày (thường 5 – 14 ngày)',
+    highRiskPopulations: ['Người lao động chân tay tiếp xúc trực tiếp bùn đất / nước tù đọng', 'Người có vết thương hở ngoài da lội qua vùng nước ngập lụt', 'Nông dân trồng lúa nước'],
+    outbreakPotential: 'moderate',
+    clinicalPearls: 'Bệnh nhân sốt cấp tính kèm đau bắp chân dữ dội, sung huyết kết mạc mắt không rỉ mủ sau khi lội nước lụt/tiếp xúc bùn đất cống rãnh: Nghĩ ngay đến Leptospira và chỉ định Doxycycline hoặc Ceftriaxone sớm.'
+  },
+  'sot-xoan-khuan-leptospira': {
+    diseaseId: 'sot-xoan-khuan-leptospira',
+    diseaseName: 'Bệnh do Leptospira (Leptospirosis / Bệnh Weil)',
+    icdCode: 'A27',
+    specialty: 'Truyền nhiễm',
+    endemicAreas: ['Đồng bằng sông Cửu Long', 'Vùng trũng ngập lụt sau mưa bão', 'Nông thôn trồng lúa nước', 'Khu vực chăn nuôi gia súc toàn quốc'],
+    peakSeasons: ['Mùa mưa lũ, ngập lụt (Tháng 6 – Tháng 11)', 'Sau các đợt bão lũ, triều cường ngập úng đô thị và nông thôn'],
+    vectors: ['Chuột cống, chuột đồng (ổ chứa chính đào thải qua nước tiểu)', 'Gia súc: lợn, bò, chó'],
+    occupationalRisks: ['Nông dân làm ruộng nước', 'Công nhân nạo vét cống rãnh, vệ sinh môi trường', 'Người dọn dẹp sau bão lũ ngập lụt', 'Bác sĩ thú y, công nhân lò mổ gia súc'],
+    foodWaterRisks: ['Nguồn nước mặt sông ngòi, ao hồ tù đọng, cống rãnh ngập nước nhiễm nước tiểu chuột', 'Bơi lội hoặc lội nước ngập có vết thương hở ngoài da'],
+    transmissionRoutes: ['Xoắn khuẩn xâm nhập trực tiếp qua da trầy xước, niêm mạc mắt/mũi/miệng khi tiếp xúc nước hoặc đất ẩm bẩn', 'Hiếm gặp: Lây qua đường tiêu hóa do uống nước nhiễm xoắn khuẩn'],
+    incubationPeriod: '2 – 30 ngày (thường 5 – 14 ngày)',
+    highRiskPopulations: ['Người lao động chân tay tiếp xúc trực tiếp bùn đất / nước tù đọng', 'Người có vết thương hở ngoài da lội qua vùng nước ngập lụt', 'Nông dân trồng lúa nước'],
+    outbreakPotential: 'moderate',
+    clinicalPearls: 'Bệnh nhân sốt cấp tính kèm đau bắp chân dữ dội, sung huyết kết mạc mắt không rỉ mủ sau khi lội nước lụt/tiếp xúc bùn đất cống rãnh: Nghĩ ngay đến Leptospira và chỉ định Doxycycline hoặc Ceftriaxone sớm.'
+  },
+  viem_phoi: {
+    diseaseId: 'viem_phoi',
+    diseaseName: 'Viêm phổi mắc phải cộng đồng (CAP)',
+    icdCode: 'J18.9',
+    specialty: 'Hô Hấp / Nhiễm',
+    endemicAreas: ['Toàn quốc, đặc biệt các khu vực ô nhiễm không khí, thời tiết chuyển lạnh'],
+    peakSeasons: ['Mùa Đông – Xuân (Miền Bắc)', 'Mùa mưa lạnh chuyển mùa (Miền Nam)'],
+    vectors: ['Không qua vector côn trùng'],
+    occupationalRisks: ['Công nhân xây dựng, mỏ than, tiếp xúc bụi đá silica', 'Nhân viên y tế'],
+    foodWaterRisks: ['Hít sặc thức ăn/dịch vị ở bệnh nhân đột quỵ, hôn mê'],
+    transmissionRoutes: ['Giọt bắn hô hấp qua ho, hắt hơi, hít phải vi sinh vật thường trú vùng hầu họng'],
+    incubationPeriod: '1 – 3 ngày đối với virus, 2 – 7 ngày đối với vi khuẩn',
+    highRiskPopulations: ['Người cao tuổi (≥ 65 tuổi)', 'Trẻ < 2 tuổi', 'Người nghiện rượu', 'BN suy giảm miễn dịch, COPD'],
+    outbreakPotential: 'moderate',
+    clinicalPearls: 'Phế cầu (Streptococcus pneumoniae) vẫn là căn nguyên hàng đầu; cảnh giác vi khuẩn không điển hình ở người trẻ.'
+  },
+  copd: {
+    diseaseId: 'copd',
+    diseaseName: 'Bệnh phổi tắc nghẽn mạn tính (COPD)',
+    icdCode: 'J44.9',
+    specialty: 'Hô Hấp',
+    endemicAreas: ['Toàn quốc, tỷ lệ cao ở vùng nông thôn dùng bếp củi và đô thị ô nhiễm bụi mịn PM2.5'],
+    peakSeasons: ['Đợt cấp bùng phát nhiều vào mùa lạnh Đông - Xuân và khi thời tiết thay đổi đột ngột'],
+    vectors: ['Không'],
+    occupationalRisks: ['Nông dân đun nấu than tổ ong/bếp củi', 'Công nhân luyện kim, dệt may, thợ mộc hít bụi gỗ'],
+    foodWaterRisks: ['Không'],
+    transmissionRoutes: ['Không lây nhiễm, bệnh lý tích lũy do phơi nhiễm khói độc'],
+    incubationPeriod: 'Bệnh tiến triển mạn tính qua 20-30 năm hút thuốc',
+    highRiskPopulations: ['Nam giới ≥ 40 tuổi hút thuốc lá/thuốc lào ≥ 20 gói-năm', 'Phụ nữ nông thôn tiếp xúc khói sinh khối'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Mỗi đợt nhiễm trùng đường hô hấp trên vào mùa lạnh đều có thể châm ngòi cho một đợt cấp COPD đe dọa tính mạng.'
+  },
+  soc_nhiem_khuan: {
+    diseaseId: 'soc_nhiem_khuan',
+    diseaseName: 'Sốc nhiễm khuẩn & Nhiễm khuẩn huyết',
+    icdCode: 'A41.9',
+    specialty: 'Hồi Sức Cấp Cứu',
+    endemicAreas: ['Toàn quốc, cả cộng đồng và nhiễm khuẩn bệnh viện (HAIs)'],
+    peakSeasons: ['Quanh năm'],
+    vectors: ['Có thể từ vết thương ngập lụt, côn trùng đốt nhiễm trùng'],
+    occupationalRisks: ['Lao động tiếp xúc bùn đất cống rãnh (Burkholderia pseudomallei - Whitmore)', 'Giết mổ lợn (Streptococcus suis)'],
+    foodWaterRisks: ['Ăn tiết canh, thịt lợn sống/tái, hải sản sống (Vibrio vulnificus)'],
+    transmissionRoutes: ['Nhiễm trùng từ ổ tiên phát (phổi, tiết niệu, đường mật, mô mềm) lan vào máu'],
+    incubationPeriod: 'Vài giờ đến vài ngày',
+    highRiskPopulations: ['Bệnh nhân nằm viện lâu ngày, đặt ống thông xâm lấn', 'Người xơ gan, ĐTĐ, người già, suy giảm miễn dịch'],
+    outbreakPotential: 'low',
+    clinicalPearls: 'Hỏi kỹ tiền sử ăn tiết canh (nghiên cứu lợn) hoặc lội bùn ruộng mùa mưa lũ (bệnh Whitmore).'
+  },
+  lao_phoi: {
+    diseaseId: 'lao_phoi',
+    diseaseName: 'Lao phổi (Tuberculosis)',
+    icdCode: 'A15',
+    specialty: 'Hô Hấp / Truyền Nhiễm',
+    endemicAreas: ['Việt Nam nằm trong top 30 quốc gia có gánh nặng bệnh lao cao nhất thế giới'],
+    peakSeasons: ['Quanh năm, phát hiện nhiều sau các đợt suy giảm thể trạng'],
+    vectors: ['Không'],
+    occupationalRisks: ['Nhân viên y tế khoa hô hấp/lao', 'Quản giáo trại giam', 'Công nhân môi trường'],
+    foodWaterRisks: ['Uống sữa bò tươi chưa tiệt trùng (Mycobacterium bovis)'],
+    transmissionRoutes: ['Lây qua đường không khí khi người bệnh ho, khạc, hắt hơi phát tán hạt khí dung'],
+    incubationPeriod: '2 – 12 tuần (hoặc lao tiềm ẩn kéo dài nhiều năm)',
+    highRiskPopulations: ['Người nhiễm HIV', 'Bệnh nhân dùng thuốc ức chế miễn dịch (Anti-TNF, Corticoid)', 'Người suy dinh dưỡng'],
+    outbreakPotential: 'moderate',
+    clinicalPearls: 'Ho khạc kéo dài trên 2 tuần kèm sốt nhẹ về chiều tại Việt Nam phải luôn xét nghiệm đờm tìm AFB/GeneXpert.'
+  },
+  viem_mang_nao: {
+    diseaseId: 'viem_mang_nao',
+    diseaseName: 'Viêm màng não',
+    icdCode: 'G00.9',
+    specialty: 'Truyền Nhiễm',
+    endemicAreas: ['Toàn quốc, ổ dịch não mô cầu xuất hiện rải rác ở tập thể đóng kín'],
+    peakSeasons: ['Đông - Xuân (Não mô cầu), Mùa hè (Phế cầu, Viêm não Nhật Bản)'],
+    vectors: ['Muỗi Culex (trong Viêm não Nhật Bản phối hợp)'],
+    occupationalRisks: ['Doanh trại quân đội, ký túc xá, nhà trẻ', 'Người giết mổ gia súc lợn'],
+    foodWaterRisks: ['Ăn tiết canh, lòng lợn sống (Liên cầu lợn Streptococcus suis)'],
+    transmissionRoutes: ['Giọt bắn hô hấp qua tiếp xúc gần hoặc qua đường tiêu hóa/vết xước da'],
+    incubationPeriod: '1 – 7 ngày đối với Não mô cầu, 1 – 3 ngày đối với Liên cầu lợn',
+    highRiskPopulations: ['Trẻ nhỏ < 5 tuổi', 'Thanh thiếu niên sống tập thể', 'Người đã cắt lách (nguy cơ cao với vi khuẩn có vỏ)'],
+    outbreakPotential: 'high',
+    clinicalPearls: 'Sốt cao, đau đầu, gáy cứng kèm ban xuất huyết hoại tử hình sao là dấu chỉ điểm của Não mô cầu nguy kịch.'
+  },
+  thuyen_tac_phoi: {
+    diseaseId: 'thuyen_tac_phoi',
+    diseaseName: 'Thuyên tắc động mạch phổi cấp (PE)',
+    icdCode: 'I26.9',
+    specialty: 'Tim Mạch',
+    endemicAreas: ['Toàn quốc, xuất hiện tại mọi cơ sở y tế tiếp nhận bệnh nhân nằm bất động'],
+    peakSeasons: ['Quanh năm'],
+    vectors: ['Không'],
+    occupationalRisks: ['Người lái xe đường dài, phi công, nhân viên văn phòng ngồi liên tục > 6-8 giờ'],
+    foodWaterRisks: ['Không'],
+    transmissionRoutes: ['Không lây nhiễm'],
+    incubationPeriod: 'Hình thành sau vài ngày đến vài tuần nằm bất động hoặc sau phẫu thuật lớn',
+    highRiskPopulations: ['Sau phẫu thuật thay khớp háng/gối', 'Bệnh nhân ung thư tiến triển', 'Phụ nữ mang thai hoặc dùng thuốc tránh thai phối hợp'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Khó thở đột ngột không giải thích được sau chuyến bay dài hoặc sau bất động chi là dấu hiệu cảnh báo số 1.'
+  },
+  xo_gan: {
+    diseaseId: 'xo_gan',
+    diseaseName: 'Xơ gan & Biến chứng tăng áp cửa',
+    icdCode: 'K74.6',
+    specialty: 'Tiêu Hóa & Gan Mật',
+    endemicAreas: ['Việt Nam có tỷ lệ nhiễm virus Viêm gan B (8-12%) và Viêm gan C (1-2%) hàng đầu khu vực'],
+    peakSeasons: ['Quanh năm, đợt mất bù hay bùng phát sau các dịp lễ tết uống nhiều rượu bia'],
+    vectors: ['Không'],
+    occupationalRisks: ['Thợ sơn, công nhân tiếp xúc hóa chất độc gan (Carbon tetrachloride)'],
+    foodWaterRisks: ['Ăn ngũ cốc, ngô mốc nhiễm độc tố Aflatoxin (tăng nguy cơ K gan trên nền xơ gan)'],
+    transmissionRoutes: ['Lây qua đường máu, quan hệ tình dục không an toàn, mẹ truyền sang con (HBV, HCV)'],
+    incubationPeriod: 'Xơ hóa tiến triển âm thầm 15-30 năm từ khi nhiễm viêm gan mạn',
+    highRiskPopulations: ['Người nghiện rượu mạn tính', 'Người mang virus HBV/HCV mạn chưa điều trị kháng virus'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Hỏi kỹ tiền sử tiêm chích, truyền máu trước năm 1992, xăm mình và lượng cồn tiêu thụ mỗi ngày.'
+  },
+  nhiem_trung_tiet_nieu: {
+    diseaseId: 'nhiem_trung_tiet_nieu',
+    diseaseName: 'Nhiễm trùng đường tiết niệu & Viêm đài bể thận',
+    icdCode: 'N39.0',
+    specialty: 'Tiết Niệu',
+    endemicAreas: ['Toàn quốc'],
+    peakSeasons: ['Mùa hè thời tiết nóng bức (mất nước, cô đặc nước tiểu)'],
+    vectors: ['Không'],
+    occupationalRisks: ['Công nhân may, tài xế thường xuyên nhịn tiểu và uống ít nước'],
+    foodWaterRisks: ['Uống ít nước, dùng nguồn nước sinh hoạt không hợp vệ sinh'],
+    transmissionRoutes: ['Nhiễm trùng ngược dòng từ vi khuẩn đường tiêu hóa qua lỗ niệu đạo'],
+    incubationPeriod: '1 – 3 ngày',
+    highRiskPopulations: ['Phụ nữ trẻ hoạt động tình dục', 'Phụ nữ mãn kinh', 'Bệnh nhân đặt ống thông tiểu lưu (CAUTI)'],
+    outbreakPotential: 'low',
+    clinicalPearls: 'Phụ nữ có niệu đạo ngắn nên tỷ lệ mắc cao gấp 30 lần nam giới; nam giới bị UTI bắt buộc tìm dị tật tắc nghẽn hoặc sỏi.'
+  },
+  viem_loet_da_day_hp: {
+    diseaseId: 'viem_loet_da_day_hp',
+    diseaseName: 'Viêm loét dạ dày tá tràng & Nhiễm H. Pylori',
+    icdCode: 'K25.9',
+    specialty: 'Tiêu Hóa',
+    endemicAreas: ['Tỷ lệ nhiễm H. pylori trong cộng đồng người Việt Nam ước tính lên đến 70%'],
+    peakSeasons: ['Quanh năm'],
+    vectors: ['Không'],
+    occupationalRisks: ['Người làm việc căng thẳng thần kinh, trực đêm nhiều, tài xế'],
+    foodWaterRisks: ['Ăn uống chung bát nước chấm, dùng chung đũa thìa gắp thức ăn'],
+    transmissionRoutes: ['Đường phân – miệng và đường miệng – miệng trong gia đình'],
+    incubationPeriod: 'Nhiễm trùng mạn tính thường mắc từ thời thơ ấu',
+    highRiskPopulations: ['Người có người thân cùng nhà nhiễm HP', 'Người lạm dụng rượu, thuốc lá, thuốc giảm đau NSAIDs'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Tập quán ăn uống chung bát chấm tại Việt Nam là nguyên nhân chính gây lây nhiễm chéo H. pylori trong gia đình.'
+  },
+  thuy_dau: {
+    diseaseId: 'thuy_dau',
+    diseaseName: 'Thủy đậu (Varicella / Chickenpox)',
+    icdCode: 'B01',
+    specialty: 'Truyền Nhiễm',
+    endemicAreas: ['Toàn quốc', 'Khu vực mật độ dân số cao', 'Nhà trẻ, trường mầm non, trường tiểu học', 'Khu dân cư tập trung'],
+    peakSeasons: ['Giao mùa Đông - Xuân đến đầu Hè (Tháng 2 đến tháng 5)', 'Thời điểm độ ẩm không khí cao'],
+    vectors: ['Không qua vector côn trùng', 'Nguồn lây người sang người qua giọt bắn hô hấp', 'Tiếp xúc dịch mụn nước thủy đậu hoặc zona'],
+    occupationalRisks: ['Giáo viên mầm non', 'Học sinh tiểu học', 'Nhân viên y tế khoa Nhi / Truyền nhiễm', 'Phụ huynh chăm sóc trẻ ốm'],
+    foodWaterRisks: ['Không lây truyền qua nguồn nước hay thực phẩm'],
+    transmissionRoutes: ['Giọt bắn đường hô hấp (Airborne / Droplet)', 'Tiếp xúc trực tiếp chất dịch từ mụn nước vỡ'],
+    incubationPeriod: '10 – 21 ngày (thường gặp 14 – 16 ngày)',
+    highRiskPopulations: ['Trẻ sơ sinh và nhũ nhi < 1 tuổi', 'Phụ nữ mang thai', 'Người trưởng thành chưa có miễn dịch', 'Bệnh nhân suy giảm miễn dịch, dùng Corticoid dài ngày'],
+    outbreakPotential: 'high',
+    clinicalPearls: 'Chỉ số lây nhiễm cơ bản cao (R0 = 10-12). Bệnh nhân lây truyền mạnh từ 24-48 giờ trước khi phát ban cho đến khi toàn bộ nốt mụn nước đã khô vảy hoàn toàn.'
+  },
+  sot_ret: {
+    diseaseId: 'sot_ret',
+    diseaseName: 'Sốt Rét (Malaria / P. falciparum, P. vivax, P. knowlesi, P. malariae)',
+    icdCode: 'B50',
+    specialty: 'Truyền nhiễm',
+    endemicAreas: ["Bệnh nhân vừa trở về từ vùng sốt rét lưu hành (huyện Bù Gia Mập, tỉnh Bình Phước) trong vòng 10 ngày qua", 'Toàn quốc'],
+    peakSeasons: ["Mùa mưa, thời tiết ẩm ướt vùng rừng núi thuận lợi cho muỗi Anopheles sinh sản và truyền bệnh sốt rét"],
+    vectors: ["Tiền sử ngủ rẫy trong rừng không mắc màn tẩm hóa chất, bị muỗi rừng Anopheles dirus / Anopheles minimus đốt nhiều lần vào ban đêm"],
+    occupationalRisks: ['Nhân viên y tế phơi nhiễm nghề nghiệp', 'Người lao động có nguy cơ tiếp xúc'],
+    foodWaterRisks: ['Tuân thủ vệ sinh an toàn thực phẩm và nguồn nước sinh hoạt'],
+    transmissionRoutes: ["Khu vực rừng rẫy biên giới có muỗi Anopheles hoạt động mạnh, có các ca bệnh sốt rét rải rác lưu hành trong cộng đồng dân cư đi rừng"],
+    incubationPeriod: 'Thời gian ủ bệnh thay đổi tùy thuộc độc lực tác nhân và cơ địa người bệnh',
+    highRiskPopulations: ['Người có bệnh nền mạn tính', 'Người cao tuổi hoặc trẻ nhỏ', 'Người suy giảm miễn dịch'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Khai thác kỹ tiền sử tiếp xúc, yếu tố phơi nhiễm dịch tễ và các triệu chứng cảnh báo sớm tại vùng lưu hành để chẩn đoán kịp thời.'
+  },
+  xo_gan_con_bu: {
+    diseaseId: 'xo_gan_con_bu',
+    diseaseName: 'Xơ gan còn bù (cACLD)',
+    icdCode: 'K74.6',
+    specialty: 'Tiêu hóa',
+    endemicAreas: ['Việt Nam là vùng lưu hành dịch tễ cao của viêm gan vi rút B và C', 'Toàn quốc'],
+    peakSeasons: ['Quanh năm (Bệnh lý mạn tính tiến triển âm thầm)'],
+    vectors: ['Không qua vector côn trùng; liên quan viêm gan B, C mạn tính hoặc nghiện rượu'],
+    occupationalRisks: ['Người có tiền sử tiếp xúc máu/chế phẩm máu', 'Lao động nặng có thói quen lạm dụng rượu bia'],
+    foodWaterRisks: ['Không lây qua đường nước uống/thực phẩm thông thường'],
+    transmissionRoutes: ['Tiến triển từ viêm gan mạn tính kéo dài (HBV, HCV, NAFLD, Rượu)'],
+    incubationPeriod: 'Nhiều năm đến hàng chục năm (10 - 30 năm)',
+    highRiskPopulations: ['Người nhiễm HBV/HCV mạn tính', 'Người nghiện rượu', 'Người thân trực hệ mắc xơ gan hoặc ung thư gan'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Xơ gan còn bù cần tầm soát sớm giãn tĩnh mạch thực quản (Baveno VII) và siêu âm kèm AFP mỗi 6 tháng để phát hiện sớm HCC.'
+  },
+  'xo-gan-con-bu': {
+    diseaseId: 'xo-gan-con-bu',
+    diseaseName: 'Xơ gan còn bù (cACLD)',
+    icdCode: 'K74.6',
+    specialty: 'Tiêu hóa',
+    endemicAreas: ['Việt Nam là vùng lưu hành dịch tễ cao của viêm gan vi rút B và C', 'Toàn quốc'],
+    peakSeasons: ['Quanh năm (Bệnh lý mạn tính tiến triển âm thầm)'],
+    vectors: ['Không qua vector côn trùng; liên quan viêm gan B, C mạn tính hoặc nghiện rượu'],
+    occupationalRisks: ['Người có tiền sử tiếp xúc máu/chế phẩm máu', 'Lao động nặng có thói quen lạm dụng rượu bia'],
+    foodWaterRisks: ['Không lây qua đường nước uống/thực phẩm thông thường'],
+    transmissionRoutes: ['Tiến triển từ viêm gan mạn tính kéo dài (HBV, HCV, NAFLD, Rượu)'],
+    incubationPeriod: 'Nhiều năm đến hàng chục năm (10 - 30 năm)',
+    highRiskPopulations: ['Người nhiễm HBV/HCV mạn tính', 'Người nghiện rượu', 'Người thân trực hệ mắc xơ gan hoặc ung thư gan'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Xơ gan còn bù cần tầm soát sớm giãn tĩnh mạch thực quản (Baveno VII) và siêu âm kèm AFP mỗi 6 tháng để phát hiện sớm HCC.'
+  },
+  dot_bung_phat_vgsv_B: {
+    diseaseId: 'dot_bung_phat_vgsv_B',
+    diseaseName: 'Đợt bùng phát viêm gan vi rút B (HBV Flare / Reactivation)',
+    icdCode: 'B18.1',
+    specialty: 'Truyền nhiễm',
+    endemicAreas: ['Việt Nam là vùng dịch tễ lưu hành cao của vi rút viêm gan B (tỷ lệ HBsAg > 8-10%)', 'Toàn quốc'],
+    peakSeasons: ['Quanh năm (Xảy ra tự phát sau ngưng thuốc NAs hoặc dùng thuốc ức chế miễn dịch)'],
+    vectors: ['Không qua vector côn trùng; nguồn gốc từ vi rút HBV nội sinh tái hoạt'],
+    occupationalRisks: ['Người bệnh điều trị ung thư/hóa trị', 'Bệnh nhân tự ý ngưng thuốc kháng vi rút NAs'],
+    foodWaterRisks: ['Không lây qua đường tiêu hóa hay nước uống'],
+    transmissionRoutes: ['Tái hoạt vi rút trên người mang HBV mạn tính'],
+    incubationPeriod: 'Khởi phát cấp tính trong 2 - 12 tuần sau khi ngưng NAs hoặc ức chế miễn dịch',
+    highRiskPopulations: ['Bệnh nhân nhiễm HBV tự ý dừng Tenofovir/Entecavir', 'Bệnh nhân dùng Rituximab, Corticoid liều cao', 'Người ghép tạng/hóa trị'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Đợt bùng phát HBV có nguy cơ suy gan cấp tối cấp. Khởi động ngay thuốc NAs (TAF/TDF/ETV) không chờ kết quả tải lượng HBV DNA.'
+  },
+  'dot-bung-phat-viem-gan-b': {
+    diseaseId: 'dot-bung-phat-viem-gan-b',
+    diseaseName: 'Đợt bùng phát viêm gan vi rút B (HBV Flare / Reactivation)',
+    icdCode: 'B18.1',
+    specialty: 'Truyền nhiễm',
+    endemicAreas: ['Việt Nam là vùng dịch tễ lưu hành cao của vi rút viêm gan B (tỷ lệ HBsAg > 8-10%)', 'Toàn quốc'],
+    peakSeasons: ['Quanh năm (Xảy ra tự phát sau ngưng thuốc NAs hoặc dùng thuốc ức chế miễn dịch)'],
+    vectors: ['Không qua vector côn trùng; nguồn gốc từ vi rút HBV nội sinh tái hoạt'],
+    occupationalRisks: ['Người bệnh điều trị ung thư/hóa trị', 'Bệnh nhân tự ý ngưng thuốc kháng vi rút NAs'],
+    foodWaterRisks: ['Không lây qua đường tiêu hóa hay nước uống'],
+    transmissionRoutes: ['Tái hoạt vi rút trên người mang HBV mạn tính'],
+    incubationPeriod: 'Khởi phát cấp tính trong 2 - 12 tuần sau khi ngưng NAs hoặc ức chế miễn dịch',
+    highRiskPopulations: ['Bệnh nhân nhiễm HBV tự ý dừng Tenofovir/Entecavir', 'Bệnh nhân dùng Rituximab, Corticoid liều cao', 'Người ghép tạng/hóa trị'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Đợt bùng phát HBV có nguy cơ suy gan cấp tối cấp. Khởi động ngay thuốc NAs (TAF/TDF/ETV) không chờ kết quả tải lượng HBV DNA.'
+  }
+};
+
+/**
+ * Lấy hồ sơ dịch tễ học của một bệnh lý
+ */
+export function getEpidemiologyProfileForDisease(diseaseId: string): DiseaseEpidemiologyProfile | undefined {
+  return EPIDEMIOLOGY_DATABASE[diseaseId];
+}
+
+/**
+ * Đánh giá mức độ phù hợp giữa bối cảnh dịch tễ của bệnh nhân và bệnh lý mục tiêu
+ * Trả về điểm cộng dịch tễ (0 - 15 điểm) và lý do biện luận
+ */
+export function matchEpidemiologyBoost(
+  diseaseId: string,
+  ctx: EpidemiologyContext
+): { score: number; reasons: string[] } {
+  const profile = EPIDEMIOLOGY_DATABASE[diseaseId];
+  if (!profile) return { score: 0, reasons: [] };
+
+  let score = 0;
+  const reasons: string[] = [];
+
+  // 1. Kiểm tra Vùng lưu hành
+  if (ctx.endemicArea && ctx.endemicArea.trim() !== '') {
+    const matched = profile.endemicAreas.some(area => 
+      ctx.endemicArea.toLowerCase().includes(area.toLowerCase()) || 
+      area.toLowerCase().includes(ctx.endemicArea.toLowerCase())
+    );
+    if (matched) {
+      score += 4;
+      reasons.push(`Nơi cư trú/lưu hành phù hợp vùng dịch: ${ctx.endemicArea}`);
+    }
+  }
+
+  // 2. Kiểm tra Mùa bệnh
+  if (ctx.seasonalContext && ctx.seasonalContext.trim() !== '') {
+    const matched = profile.peakSeasons.some(season =>
+      ctx.seasonalContext.toLowerCase().includes(season.toLowerCase()) ||
+      season.toLowerCase().includes(ctx.seasonalContext.toLowerCase())
+    );
+    if (matched) {
+      score += 3;
+      reasons.push(`Thời điểm mắc bệnh rơi vào mùa cao điểm dịch tễ`);
+    }
+  }
+
+  // 3. Kiểm tra Tiếp xúc Vector côn trùng / Động vật
+  if (ctx.vectorExposure && ctx.vectorExposure.trim() !== '') {
+    const matched = profile.vectors.some(vec =>
+      ctx.vectorExposure.toLowerCase().includes(vec.toLowerCase()) ||
+      vec.toLowerCase().includes(ctx.vectorExposure.toLowerCase())
+    );
+    if (matched) {
+      score += 4;
+      reasons.push(`Tiền sử tiếp xúc vector truyền bệnh: ${ctx.vectorExposure}`);
+    }
+  }
+
+  // 4. Kiểm tra Nguy cơ Nghề nghiệp
+  if (ctx.occupationalRisk && ctx.occupationalRisk.trim() !== '') {
+    const matched = profile.occupationalRisks.some(occ =>
+      ctx.occupationalRisk.toLowerCase().includes(occ.toLowerCase()) ||
+      occ.toLowerCase().includes(ctx.occupationalRisk.toLowerCase())
+    );
+    if (matched) {
+      score += 2;
+      reasons.push(`Yếu tố nguy cơ nghề nghiệp liên quan`);
+    }
+  }
+
+  // 5. Kiểm tra Nguồn nước / Thực phẩm
+  if (ctx.waterFoodRisk && ctx.waterFoodRisk.trim() !== '') {
+    const matched = profile.foodWaterRisks.some(food =>
+      ctx.waterFoodRisk.toLowerCase().includes(food.toLowerCase()) ||
+      food.toLowerCase().includes(ctx.waterFoodRisk.toLowerCase())
+    );
+    if (matched) {
+      score += 3;
+      reasons.push(`Phơi nhiễm nguồn nước/thực phẩm nguy cơ cao`);
+    }
+  }
+
+  return {
+    score: Math.min(score, 15), // Chặn trên tối đa 15 điểm boost
+    reasons,
+    aclf: {
+    diseaseId: 'aclf',
+    diseaseName: 'Suy gan cấp trên nền mạn (Acute-on-Chronic Liver Failure - ACLF)',
+    icdCode: 'K72.1',
+    specialty: 'Hồi sức cấp cứu / Tiêu hóa - Gan mật',
+    endemicAreas: ["Việt Nam là vùng lưu hành dịch tễ cao của Viêm gan vi rút B (HBV)", 'Toàn quốc'],
+    peakSeasons: ["Ghi nhận gia tăng ca ACLF do tái hoạt HBV ở bệnh nhân tự ý ngưng thuốc kháng vi rút"],
+    vectors: ["Tiền sử nhiễm HBV mạn tính chưa được quản lý điều trị thuốc kháng vi rút (NAs) liên tục"],
+    occupationalRisks: ['Nhân viên y tế phơi nhiễm nghề nghiệp', 'Người lao động có nguy cơ tiếp xúc'],
+    foodWaterRisks: ['Tuân thủ vệ sinh an toàn thực phẩm và nguồn nước sinh hoạt'],
+    transmissionRoutes: ["Cảnh báo đợt bùng phát/tái hoạt vi rút B cấp tính trên nền bệnh gan mạn"],
+    incubationPeriod: 'Thời gian ủ bệnh thay đổi tùy thuộc độc lực tác nhân và cơ địa người bệnh',
+    highRiskPopulations: ['Người có bệnh nền mạn tính', 'Người cao tuổi hoặc trẻ nhỏ', 'Người suy giảm miễn dịch'],
+    outbreakPotential: 'sporadic',
+    clinicalPearls: 'Khai thác kỹ tiền sử tiếp xúc, yếu tố phơi nhiễm dịch tễ và các triệu chứng cảnh báo sớm tại vùng lưu hành để chẩn đoán kịp thời.'
+  },
+};
+}

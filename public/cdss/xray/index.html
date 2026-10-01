@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CDSS Phân Tích X-Quang Ngực &amp; Bụng Thông Minh (RadAI) — CliniPortal CDSS</title>
+  <meta name="description" content="Hệ thống Hỗ trợ Quyết định Lâm sàng Phân tích Hình ảnh X-Quang Kỹ Thuật Số: Khảo sát X-quang ngực thẳng/nghiêng, X-quang bụng đứng/nằm, điều khiển PACS và xuất kết luận chuẩn Bệnh Án DocSpace SOAP.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Space+Grotesk:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <link rel="stylesheet" href="../../../../styles/tokens.css">
+  <link rel="stylesheet" href="../../../../styles/main.css">
+  <link rel="stylesheet" href="../../css/vault-design-tokens.css">
+  <link rel="stylesheet" href="../../css/vault-hub.css">
+  <link rel="stylesheet" href="css/xray-cdss.css">
+
+  <!-- CliniPortal CDSS Shell Styles & Theme Script -->
+  <link rel="stylesheet" href="../shared/cdss-shell.css">
+  <script src="../shared/cdss-shell.js"></script>
+</head>
+<body>
+  <!-- CliniPortal Master Navigation Bar -->
+  <header class="cdss-portal-navbar">
+    <div class="cdss-portal-nav-breadcrumbs">
+      <a href="../../index.html" class="crumb-hide-mobile"><i class="fa-solid fa-graduation-cap"></i> Knowledge Vault</a>
+      <i class="fa-solid fa-chevron-right separator crumb-hide-mobile"></i>
+      <a href="../index.html"><i class="fa-solid fa-network-wired"></i> Kho CDSS</a>
+      <i class="fa-solid fa-chevron-right separator"></i>
+      <span class="active"><i class="fa-solid fa-x-ray text-blue-600"></i> Phân Tích X-Quang (RadAI)</span>
+    </div>
+
+    <div class="cdss-portal-nav-right">
+      <a href="../../docspace/index.html" class="cdss-portal-nav-btn" title="Mở trong Hồ Sơ Bệnh Án DocSpace">
+        <i class="fa-solid fa-user-doctor"></i> <span>DocSpace Pro</span>
+      </a>
+      <a href="../index.html" class="cdss-portal-nav-btn" title="Trở về Trung Tâm CDSS">
+        <i class="fa-solid fa-th-large"></i> <span>Danh Mục CDSS</span>
+      </a>
+      <button id="theme-toggle" class="cdss-portal-theme-btn" title="Chuyển chế độ Sáng/Tối" aria-label="Toggle Theme">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mount Point for RadAI X-Ray CDSS Application -->
+  <div id="xray-cdss-container"></div>
+
+  <script type="module">
+    import { XRayCDSSController } from './xray-bundle.js';
+
+    // Initialize Controller
+    new XRayCDSSController('xray-cdss-container');
+  </script>
+</body>
+</html>

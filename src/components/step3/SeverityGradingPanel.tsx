@@ -1,0 +1,466 @@
+import React from 'react';
+import {
+  Activity,
+  Building2,
+  Compass,
+  Layers,
+  Sparkles,
+  Target,
+  Zap,
+} from 'lucide-react';
+import {
+  DiseaseReactionChainDefinition,
+  SeverityGradingItem,
+} from '../../../data/diagnostic-criteria-database.ts';
+import { CombinedProtocol, ClinicalSubBranch } from '../../types.ts';
+import { SevereSubBranchSelector } from './SevereSubBranchSelector.tsx';
+
+interface SeverityGradingPanelProps {
+  severityGrades: SeverityGradingItem[];
+  selectedGradeIdx: number;
+  onSelectGradeIdx: (idx: number) => void;
+  autoSuggestedGradeIndex?: number;
+  activeChain?: DiseaseReactionChainDefinition;
+  selectedAxes?: Record<string, string>;
+  onSelectAxisBranch?: (axisId: string, branchId: string) => void;
+  activeCombinedProtocol?: CombinedProtocol | null;
+  subBranches?: ClinicalSubBranch[];
+  selectedSubBranchIds?: string[];
+  onToggleSubBranch?: (subBranchId: string) => void;
+}
+
+export const SeverityGradingPanel: React.FC<SeverityGradingPanelProps> = ({
+  severityGrades,
+  selectedGradeIdx,
+  onSelectGradeIdx,
+  autoSuggestedGradeIndex = 0,
+  activeChain,
+  selectedAxes = {},
+  onSelectAxisBranch,
+  activeCombinedProtocol,
+  subBranches = [],
+  selectedSubBranchIds = [],
+  onToggleSubBranch,
+}) => {
+  const isMultiAxis = Boolean(
+    activeChain?.branching?.mode === 'multi' &&
+    activeChain?.branching?.axes &&
+    activeChain.branching.axes.length > 0
+  );
+  return (
+    <div className="bg-gradient-to-br from-indigo-50/90 via-blue-50/40 to-slate-50 border-2 border-indigo-200/90 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col gap-4">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-indigo-100 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+            <Layers className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="font-display font-bold text-sm sm:text-base text-indigo-950">
+                {activeChain?.branching?.axisName || 'Đánh Giá Phân Độ LS & Sàng Lọc Biến Chứng'}
+              </h4>
+              <span className="px-2 py-0.5 rounded text-[10.5px] font-mono bg-indigo-100 text-indigo-700 font-semibold border border-indigo-200">
+                {activeChain?.branching?.axisType ? `Nhánh: ${activeChain.branching.axisType.toUpperCase()}` : 'Quy trình EBM'}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              {activeChain?.branching?.description || 'Tiêu chuẩn phân nhánh quyết định chính xác phác đồ, lựa chọn thuốc, tốc độ dịch và tuyến điều trị.'}
+            </p>
+          </div>
+        </div>
+
+        {/* Auto-suggest badge */}
+        {autoSuggestedGradeIndex > 0 && severityGrades[autoSuggestedGradeIndex] && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-xs font-semibold animate-pulse">
+            <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+            <span>Gợi ý tự động từ DHST/CLS: {severityGrades[autoSuggestedGradeIndex]?.grade.split(':')[0]}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Phần 1: Các nút chọn Phân độ / Thể bệnh / Phân nhánh (Severity Staging & Phenotypes Grid) */}
+      {isMultiAxis ? (
+        /* ========================================================================= */
+        /* 🌿 MULTI-AXIS CLINICAL BRANCHING ENGINE v4.0 (ĐA TRỤC PHÂN NHÁNH)         */
+        /* ========================================================================= */
+        <div className="flex flex-col gap-4">
+          <div className="p-3 bg-indigo-900/10 border border-indigo-200/80 rounded-lg flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2">
+              <Compass className="w-4 h-4 text-indigo-700 shrink-0" />
+              <span className="text-indigo-950 font-semibold">
+                <b>Phân nhánh đa trục phối hợp:</b> Chọn lần lượt từng trục lâm sàng bên dưới để hệ thống định hình phác đồ điều trị tổ hợp tối ưu.
+              </span>
+            </div>
+            <span className="px-2 py-0.5 rounded text-[10.5px] font-mono bg-indigo-100 text-indigo-700 font-bold shrink-0">
+              {activeChain?.branching?.axes?.length || 2} TRỤC ĐỘC LẬP
+            </span>
+          </div>
+
+          {/* Danh sách các trục */}
+          {activeChain?.branching?.axes?.map((axis, axisIdx) => {
+            const currentSelectedBranchId = selectedAxes[axis.axisId] || axis.branches[0]?.id;
+            return (
+              <div key={axis.axisId} className="bg-white/80 border border-indigo-100 rounded-lg p-3.5 flex flex-col gap-2.5 shadow-2xs">
+                {/* Header trục */}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[11px] font-bold flex items-center justify-center">
+                      {axis.axisOrder || axisIdx + 1}
+                    </span>
+                    <span className="font-bold text-xs sm:text-sm text-slate-900">
+                      {axis.axisName}
+                    </span>
+                    <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-slate-100 text-slate-600 border border-slate-200">
+                      {axis.axisType.toUpperCase()}
+                    </span>
+                  </div>
+                  {axis.description && (
+                    <span className="text-[11px] text-slate-500 italic">
+                      {axis.description}
+                    </span>
+                  )}
+                </div>
+
+                {/* Grid các branches của trục này */}
+                <div className={`grid ${
+                  axis.branches.length === 1
+                    ? 'grid-cols-1'
+                    : axis.branches.length === 2
+                    ? 'grid-cols-1 sm:grid-cols-2'
+                    : axis.branches.length === 3
+                    ? 'grid-cols-1 sm:grid-cols-3'
+                    : axis.branches.length === 5
+                    ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5'
+                    : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+                } gap-2`}>
+                  {axis.branches.map((b) => {
+                    const isSelected = currentSelectedBranchId === b.id;
+                    const c = (b.color || '').toLowerCase();
+                    let activeStyles = 'border-indigo-500 bg-indigo-50/90 text-indigo-950 ring-2 ring-indigo-500';
+                    let pillStyles = 'bg-indigo-100 text-indigo-700';
+
+                    if (c === 'emerald' || c === 'green') {
+                      activeStyles = 'border-emerald-500 bg-emerald-50/90 text-emerald-950 ring-2 ring-emerald-500';
+                      pillStyles = 'bg-emerald-100 text-emerald-800';
+                    } else if (c === 'amber' || c === 'yellow') {
+                      activeStyles = 'border-amber-500 bg-amber-50/90 text-amber-950 ring-2 ring-amber-500';
+                      pillStyles = 'bg-amber-100 text-amber-800';
+                    } else if (c === 'orange') {
+                      activeStyles = 'border-orange-500 bg-orange-50/90 text-orange-950 ring-2 ring-orange-500';
+                      pillStyles = 'bg-orange-100 text-orange-800';
+                    } else if (c === 'rose' || c === 'red') {
+                      activeStyles = 'border-rose-500 bg-rose-50/90 text-rose-950 ring-2 ring-rose-500';
+                      pillStyles = 'bg-rose-100 text-rose-800';
+                    } else if (c === 'purple' || c === 'violet') {
+                      activeStyles = 'border-purple-600 bg-purple-50/90 text-purple-950 ring-2 ring-purple-600';
+                      pillStyles = 'bg-purple-100 text-purple-800';
+                    } else if (c === 'blue' || c === 'sky') {
+                      activeStyles = 'border-blue-500 bg-blue-50/90 text-blue-950 ring-2 ring-blue-500';
+                      pillStyles = 'bg-blue-100 text-blue-800';
+                    }
+
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => onSelectAxisBranch && onSelectAxisBranch(axis.axisId, b.id)}
+                        className={`p-2.5 rounded-lg border text-left flex flex-col justify-between gap-1.5 transition-all cursor-pointer ${
+                          isSelected
+                            ? `${activeStyles} shadow-xs font-semibold scale-[1.01]`
+                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-1.5">
+                          <span className="text-xs leading-snug">{b.name}</span>
+                          {b.badgeText && (
+                            <span className={`px-1.5 py-0.2 rounded text-[10px] shrink-0 font-medium ${pillStyles}`}>
+                              {b.badgeText}
+                            </span>
+                          )}
+                        </div>
+                        {b.criteria && (
+                          <p className="text-[10.5px] text-slate-500 line-clamp-2 leading-relaxed">
+                            {b.criteria}
+                          </p>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Banner Tổ Hợp Phác Đồ Đang Chọn (Active Combined Protocol Banner) */}
+          <div className="bg-white border-2 border-indigo-300 rounded-xl p-4 shadow-xs flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-indigo-600 shrink-0" />
+                <span className="font-bold text-sm text-indigo-950">
+                  {activeCombinedProtocol?.combinedName || 'Phác đồ Tổ Hợp Lâm Sàng Đang Áp Dụng'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {activeChain?.branching?.axes?.map((axis) => {
+                  const bId = selectedAxes[axis.axisId] || axis.branches[0]?.id;
+                  const b = axis.branches.find((item) => item.id === bId);
+                  return (
+                    <span key={axis.axisId} className="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      {b?.badgeText || b?.name}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Cảnh báo đặc thù tổ hợp nếu có */}
+            {activeCombinedProtocol?.keyWarnings && activeCombinedProtocol.keyWarnings.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex flex-col gap-1.5 text-xs text-red-900">
+                <div className="flex items-center gap-1.5 font-bold text-red-950">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+                  <span>CẢNH BÁO SỐNG CÒN RIÊNG CHO TỔ HỢP NÀY:</span>
+                </div>
+                <ul className="list-disc list-inside space-y-0.5 text-[11.5px]">
+                  {activeCombinedProtocol.keyWarnings.map((w, wIdx) => (
+                    <li key={wIdx} className="leading-relaxed font-medium">{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Y lệnh bổ sung đặc thù tổ hợp nếu có */}
+            {activeCombinedProtocol?.additionalTreatments && activeCombinedProtocol.additionalTreatments.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex flex-col gap-1.5 text-xs text-amber-900">
+                <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                  <Zap className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Y LỆNH & ĐIỀU TRỊ BỔ SUNG ĐẶC THÙ TỔ HỢP:</span>
+                </div>
+                <ul className="list-disc list-inside space-y-0.5 text-[11.5px]">
+                  {activeCombinedProtocol.additionalTreatments.map((t, tIdx) => (
+                    <li key={tIdx} className="leading-relaxed font-semibold">{t}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Tuyến & Mục tiêu tổ hợp */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
+                <span className="font-bold text-slate-700 block mb-1">Tuyến tiếp nhận:</span>
+                <span className="text-slate-900 font-semibold">
+                  {activeCombinedProtocol?.triage || severityGrades[selectedGradeIdx]?.triage || 'Nội trú Chuyên khoa Gan mật'}
+                </span>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
+                <span className="font-bold text-slate-700 block mb-1">Mục tiêu lâm sàng:</span>
+                <span className="text-slate-900 font-semibold">
+                  {activeCombinedProtocol?.targetVitals || severityGrades[selectedGradeIdx]?.targetVitals || 'Duy trì chức năng tạng và phòng ngừa biến cố mất bù.'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : severityGrades.length === 0 ? (
+        <div className="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-lg flex items-center justify-between gap-3 text-xs text-indigo-950">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span>
+              <b>Phác đồ tiếp cận toàn diện:</b> Bệnh lý này tiếp cận theo thể lâm sàng và triệu chứng đích (không chia theo phân độ bậc thang). Toàn bộ phác đồ và y lệnh chuyên khoa được quy hoạch theo các phân mục bên dưới.
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5 text-indigo-600" />
+              <span>
+                1. Chọn {
+                  activeChain?.branching?.axisName
+                    ? `nhánh [${activeChain.branching.axisName}]`
+                    : activeChain?.stagingType === 'phenotype' ||
+                      severityGrades.some((g) => g.grade.toLowerCase().includes('thể ') || g.severity === 'phenotype')
+                    ? 'thể lâm sàng / dạng bệnh'
+                    : 'phân độ LS'
+                } hiện tại của người bệnh:
+              </span>
+            </span>
+            <span className="text-[11px] text-slate-400">
+              (Nhấp vào nhánh tương ứng để xem tiêu chuẩn và phác đồ chuyên biệt)
+            </span>
+          </div>
+
+          <div className={`grid ${
+            severityGrades.length === 1
+              ? 'grid-cols-1 max-w-2xl mx-auto'
+              : severityGrades.length === 2
+              ? 'grid-cols-1 md:grid-cols-2'
+              : severityGrades.length === 3
+              ? 'grid-cols-1 md:grid-cols-3'
+              : severityGrades.length === 4
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+              : severityGrades.length === 5
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+              : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+          } gap-2.5`}>
+            {severityGrades.map((g, idx) => {
+              const isSelected = selectedGradeIdx === idx;
+              const isAutoSuggested = autoSuggestedGradeIndex === idx;
+              const s = (g.severity || '').toLowerCase();
+              
+              let badgeColor = 'border-emerald-300 bg-emerald-50 text-emerald-900';
+              let pillBg = 'bg-emerald-200 text-emerald-800';
+
+              if (s === 'critical' || s === 'emergency' || s === 'severe_4' || s === 'grade-4' || (severityGrades.length > 3 && idx === severityGrades.length - 1)) {
+                badgeColor = 'border-red-400 bg-red-50/90 text-red-900';
+                pillBg = 'bg-red-200 text-red-800';
+              } else if (s === 'severe' || s === 'grade-3' || (severityGrades.length >= 4 && idx === severityGrades.length - 2)) {
+                badgeColor = 'border-orange-300 bg-orange-50 text-orange-900';
+                pillBg = 'bg-orange-200 text-orange-800';
+              } else if (s === 'moderate' || s === 'grade-2' || (severityGrades.length >= 3 && idx === 1) || (severityGrades.length === 2 && idx === 1)) {
+                badgeColor = 'border-amber-300 bg-amber-50 text-amber-900';
+                pillBg = 'bg-amber-200 text-amber-800';
+              } else if (s === 'phenotype' || s === 'form' || s === 'type') {
+                badgeColor = 'border-indigo-300 bg-indigo-50 text-indigo-900';
+                pillBg = 'bg-indigo-200 text-indigo-800';
+              }
+
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => onSelectGradeIdx(idx)}
+                  className={`p-3 rounded-lg border text-left flex flex-col justify-between gap-2 transition-all cursor-pointer ${
+                    isSelected
+                      ? `${badgeColor} ring-2 ring-indigo-500 shadow-sm scale-[1.01]`
+                      : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-1.5">
+                    <span className="font-bold text-xs leading-snug">{g.grade}</span>
+                    {isAutoSuggested && (
+                      <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-amber-500 text-white shrink-0">
+                        Gợi ý
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10.5px] pt-1 border-t border-slate-100">
+                    <span className="text-slate-500 font-medium">Tuyến: <b>{g.triage ? g.triage.split('/')[0] : 'Ngoại trú'}</b></span>
+                    <span className={`px-1.5 py-0.2 rounded font-semibold text-[10px] ${pillBg}`}>
+                      {g.badgeText || g.severity?.toUpperCase() || 'MỨC ĐỘ'}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Chi tiết phác đồ xử trí cốt lõi theo phân độ - Bảng Định Hướng & Tuyến Tiếp Nhận */}
+          {severityGrades[selectedGradeIdx] && (
+            <div className="bg-white border border-indigo-200/90 rounded-lg p-4 text-xs text-slate-800 flex flex-col gap-3.5 shadow-2xs">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span className="font-bold text-sm text-indigo-950">
+                    Chiến Lược Điều Trị & Phân Tuyến Tiếp Nhận: {severityGrades[selectedGradeIdx].grade}
+                  </span>
+                </div>
+                <span className="px-2.5 py-0.5 rounded text-[11px] bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
+                  Mức độ: {severityGrades[selectedGradeIdx].severity.toUpperCase()}
+                </span>
+              </div>
+
+              {/* 3 Mục chuyển tiếp từ Bước 3 sang: Tuyến tiếp nhận, Định hướng, Mục tiêu */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* 1. Tuyến tiếp nhận */}
+                <div className="bg-blue-50/80 border border-blue-200/90 rounded-lg p-3 flex flex-col justify-between gap-2 shadow-2xs">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-[11px] text-blue-900 uppercase tracking-wider">
+                      <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      <span>Tuyến Tiếp Nhận & Phân Luồng:</span>
+                    </div>
+                    <p className="text-xs text-slate-900 font-semibold leading-relaxed">
+                      {severityGrades[selectedGradeIdx].triage}
+                    </p>
+                  </div>
+                  <span className="text-[10.5px] text-blue-700 font-medium">
+                    Cơ sở y tế được chỉ định tiếp nhận theo chuẩn Bộ Y tế
+                  </span>
+                </div>
+
+                {/* 2. Định hướng chiến lược */}
+                <div className="bg-indigo-50/80 border border-indigo-200/90 rounded-lg p-3 flex flex-col justify-between gap-2 shadow-2xs">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-[11px] text-indigo-900 uppercase tracking-wider">
+                      <Compass className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                      <span>Định Hướng Chiến Lược Xử Trí:</span>
+                    </div>
+                    <p className="text-xs text-slate-900 font-semibold leading-relaxed">
+                      {severityGrades[selectedGradeIdx].primaryAction}
+                    </p>
+                  </div>
+                  <span className="text-[10.5px] text-indigo-700 font-medium">
+                    Quy trình can thiệp & hồi sức cốt lõi
+                  </span>
+                </div>
+
+                {/* 3. Mục tiêu điều trị */}
+                <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-lg p-3 flex flex-col justify-between gap-2 shadow-2xs">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-[11px] text-emerald-900 uppercase tracking-wider">
+                      <Target className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>Mục Tiêu Điều Trị & Sinh Hiệu:</span>
+                    </div>
+                    <p className="text-xs font-mono-custom text-emerald-950 font-bold leading-relaxed">
+                      {severityGrades[selectedGradeIdx].targetVitals || 'Duy trì sinh hiệu ổn định trong giới hạn an toàn.'}
+                    </p>
+                  </div>
+                  <span className="text-[10.5px] text-emerald-700 font-medium">
+                    Đích huyết động an toàn & bảo tồn tưới máu tạng
+                  </span>
+                </div>
+              </div>
+
+              {/* Tham chiếu tiêu chí chẩn đoán phân độ */}
+              <details className="text-[11.5px] text-slate-500 pt-0.5 group">
+                <summary className="cursor-pointer hover:text-indigo-700 flex items-center gap-1.5 font-medium select-none text-[11px]">
+                  <span>🔍 Nhấp để xem lại tiêu chuẩn xếp độ (đã phân tích ở Bước 3)</span>
+                </summary>
+                <div className="mt-2 p-2.5 bg-slate-50 border border-slate-200 rounded-md text-slate-700 leading-relaxed text-[11px]">
+                  <b>Tiêu chuẩn lâm sàng & CLS xác định phân độ:</b> {severityGrades[selectedGradeIdx].criteria}
+                </div>
+              </details>
+
+              {/* Phân nhánh thể bệnh nặng chuyên sâu (Sub-branches - VD SXH Nặng: Sốc, Suy hô hấp đa màng, XHTH, Suy gan, Suy thận...) */}
+              {subBranches && subBranches.length > 0 && (
+                <div className="pt-2 border-t border-indigo-100">
+                  <SevereSubBranchSelector
+                    subBranches={subBranches}
+                    selectedSubBranchIds={selectedSubBranchIds}
+                    onToggleSubBranch={onToggleSubBranch || (() => {})}
+                    onSelectAllSubBranches={() => {
+                      subBranches.forEach((sb) => {
+                        if (!selectedSubBranchIds.includes(sb.id) && onToggleSubBranch) {
+                          onToggleSubBranch(sb.id);
+                        }
+                      });
+                    }}
+                    onClearSubBranches={() => {
+                      selectedSubBranchIds.forEach((id) => {
+                        if (onToggleSubBranch) onToggleSubBranch(id);
+                      });
+                    }}
+                    subBranchLabel="Lựa chọn các biểu hiện / thể lâm sàng nặng phối hợp"
+                    subBranchMode="multi-select"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
