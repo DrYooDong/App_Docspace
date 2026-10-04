@@ -74,6 +74,9 @@ export class EcgCanvasRenderer {
   // Pixels to MM scaling (standard 1mm = ~3.78px on 96dpi, configured for crisp rendering)
   public readonly PIXELS_PER_MM = 3.7795; // ~96 DPI screen standard
 
+  public logicalWidth: number = 1000;
+  public logicalHeight: number = 580;
+
   constructor(containerId: string, initialCase: EcgCase, opts: EcgCanvasOptions = {}) {
     const el = document.getElementById(containerId);
     if (!el) throw new Error(`Container #${containerId} not found`);
@@ -171,6 +174,9 @@ export class EcgCanvasRenderer {
     else if (this.options.layoutMode === '12x1') height = 1400;
     else if (this.options.layoutMode === 'single') height = 480;
 
+    this.logicalWidth = width;
+    this.logicalHeight = height;
+
     this.canvas.width = width * dpr;
     this.canvas.height = height * dpr;
     this.canvas.style.height = `${height}px`;
@@ -185,8 +191,10 @@ export class EcgCanvasRenderer {
 
     this.canvas.addEventListener('mousedown', (e) => {
       const rect = this.canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const scaleX = rect.width > 0 ? this.logicalWidth / rect.width : 1;
+      const scaleY = rect.height > 0 ? this.logicalHeight / rect.height : 1;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
 
       if (this.caliper.active) {
         this.isDraggingCaliper = true;
@@ -209,8 +217,10 @@ export class EcgCanvasRenderer {
     this.canvas.addEventListener('mousemove', (e) => {
       if (this.caliper.active && this.isDraggingCaliper) {
         const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const scaleX = rect.width > 0 ? this.logicalWidth / rect.width : 1;
+        const scaleY = rect.height > 0 ? this.logicalHeight / rect.height : 1;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
 
         this.caliper.endX = x;
         this.caliper.endY = y;
@@ -241,8 +251,12 @@ export class EcgCanvasRenderer {
   private placeAnnotation(x: number, y: number, wave: WaveType): void {
     const lead = this.options.selectedLead || 'II';
     const pxPerMm = this.PIXELS_PER_MM;
-    const timeMs = Math.round(((x % 300) / pxPerMm / this.options.paperSpeed) * 1000);
-    const voltageMv = Number(((y / pxPerMm) / (10 * this.options.voltageGain)).toFixed(2));
+    const offsetStartX = 12 + (5 * pxPerMm);
+    const diffXPx = Math.max(0, x - offsetStartX);
+    const timeMs = Math.round((diffXPx / pxPerMm / this.options.paperSpeed) * 1000);
+    const originY = this.logicalHeight * 0.5;
+    const diffYPx = originY - y;
+    const voltageMv = Number(((diffYPx / pxPerMm) / (10 * this.options.voltageGain)).toFixed(2));
 
     const ann: ManualAnnotation = {
       id: 'ann_' + Date.now(),
@@ -572,11 +586,12 @@ export class EcgCanvasRenderer {
     this.ctx.setLineDash([4, 4]);
 
     // Horizontal calipers
+    const lineBottom = this.logicalHeight || 600;
     this.ctx.beginPath();
     this.ctx.moveTo(c.startX, 0);
-    this.ctx.lineTo(c.startX, this.canvas.height);
+    this.ctx.lineTo(c.startX, lineBottom);
     this.ctx.moveTo(c.endX, 0);
-    this.ctx.lineTo(c.endX, this.canvas.height);
+    this.ctx.lineTo(c.endX, lineBottom);
     this.ctx.stroke();
 
     // Measurement readout badge
